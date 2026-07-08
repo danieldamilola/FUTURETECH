@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #f2ede6;
+  --foreground: #111110;
+  --card: #ede8e0;
+  --card-foreground: #111110;
+  --popover: #e8e2d9;
+  --popover-foreground: #111110;
+  --primary: #d42b1e;
+  --primary-foreground: #ffffff;
+  --secondary: #e8e3da;
+  --secondary-foreground: #111110;
+  --muted: #ddd8cf;
+  --muted-foreground: #7a7267;
+  --accent: #d42b1e;
+  --accent-foreground: #ffffff;
+  --destructive: #d42b1e;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: transparent;
+  --input-background: #e8e3da;
+  --switch-background: #ccc7be;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #d42b1e;
+}
+
+.dark {
+  --background: #141210;
+  --foreground: #f0ece4;
+  --card: #1c1916;
+  --card-foreground: #f0ece4;
+  --popover: #221f1b;
+  --popover-foreground: #f0ece4;
+  --primary: #e03428;
+  --primary-foreground: #ffffff;
+  --secondary: #242018;
+  --secondary-foreground: #f0ece4;
+  --muted: #1c1916;
+  --muted-foreground: #8a8070;
+  --accent: #e03428;
+  --accent-foreground: #ffffff;
+  --destructive: #e03428;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: #242018;
+  --ring: #e03428;
+}
+
+
+/* ============================================================
+   FUTURETECH — DESIGN SYSTEM TOKENS
+   ============================================================ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* --- Colours --- */
+  --color-canvas:        #F9FAFB;
+  --color-surface:       #FFFFFF;
+  --color-ink:           #18181B;
+  --color-ink-muted:     #71717A;
+  --color-border:        rgba(226, 232, 240, 0.7);
+  --color-midnight:      #0F172A;
+  --color-midnight-soft: #1E293B;
+  --color-crimson:       #B91C1C;
+  --color-crimson-hover: #991B1B;
+  --color-crimson-light: #FEF2F2;
+
+  /* --- Typography --- */
+  --font-display: var(--font-serif);
+  --font-body:    var(--font-geist-sans);
+  --font-mono:    var(--font-mono);
+
+  /* --- Radii --- */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* --- Shadows --- */
+  --shadow-card:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-modal: 0 20px 60px rgba(0,0,0,0.35), 0 8px 24px rgba(0,0,0,0.2);
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+/* ============================================================
+   FOCUS STYLES (Accessibility)
+   ============================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-crimson);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   SCROLLBAR (Subtle)
+   ============================================================ */
+
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #d4d4d8; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
+.font-display { font-family: var(--font-display); }
+.font-body    { font-family: var(--font-body); }
+
+/* Shimmer skeleton loader */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: 4px;
+}
+
+/* ============================================================
+   AUTH CARD — class-based to prevent Dark Reader hydration errors
+   ============================================================ */
+
+.auth-card           { background-color: #0F172A; }
+.auth-surface        { background-color: #1E293B; border: 1px solid rgba(255,255,255,0.08); }
+.auth-surface-error  { background-color: #1E293B; border: 1px solid #B91C1C; }
+.auth-text           { color: #F1F5F9; }
+.auth-text-muted     { color: #94A3B8; }
+.auth-text-subtle    { color: #64748B; }
+.auth-text-error     { color: #FCA5A5; }
+.auth-text-crimson   { color: #B91C1C; }
+.auth-divider        { background-color: rgba(255,255,255,0.08); }
+.auth-error-box      { background-color: #450A0A; border: 1px solid #7F1D1D; color: #FCA5A5; }
+.auth-brand          { color: #B91C1C; font-family: var(--font-display); }
+.auth-btn-primary    { background-color: #B91C1C; color: #FFFFFF; }
+.auth-btn-secondary  { background-color: #1E293B; color: #F1F5F9; border: 1px solid rgba(255,255,255,0.08); }
+.auth-placeholder    { color: #475569; }
+input.auth-input::placeholder { color: #475569; }
+
+/* ============================================================
+   AUTH PAGE BG
+   ============================================================ */
+
+.auth-bg {
+  background-image: url('/auth-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
