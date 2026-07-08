@@ -53,7 +53,7 @@ export async function login(state: AuthFormState, formData: FormData): Promise<A
   })
 
   if (error) {
-    return { errors: { general: ['Invalid email or password. Please try again.'] } }
+    return { errors: { general: [error.message] } }
   }
 
   revalidatePath('/', 'layout')

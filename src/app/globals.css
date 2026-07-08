@@ -174,37 +174,6 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 4px;
 }
 
-/* ============================================================
-   AUTH CARD — class-based to prevent Dark Reader hydration errors
-   ============================================================ */
-
-.auth-card           { background-color: #0F172A; }
-.auth-surface        { background-color: #1E293B; border: 1px solid rgba(255,255,255,0.08); }
-.auth-surface-error  { background-color: #1E293B; border: 1px solid #B91C1C; }
-.auth-text           { color: #F1F5F9; }
-.auth-text-muted     { color: #94A3B8; }
-.auth-text-subtle    { color: #64748B; }
-.auth-text-error     { color: #FCA5A5; }
-.auth-text-crimson   { color: #B91C1C; }
-.auth-divider        { background-color: rgba(255,255,255,0.08); }
-.auth-error-box      { background-color: #450A0A; border: 1px solid #7F1D1D; color: #FCA5A5; }
-.auth-brand          { color: #B91C1C; font-family: var(--font-display); }
-.auth-btn-primary    { background-color: #B91C1C; color: #FFFFFF; }
-.auth-btn-secondary  { background-color: #1E293B; color: #F1F5F9; border: 1px solid rgba(255,255,255,0.08); }
-.auth-placeholder    { color: #475569; }
-input.auth-input::placeholder { color: #475569; }
-
-/* ============================================================
-   AUTH PAGE BG
-   ============================================================ */
-
-.auth-bg {
-  background-image: url('/auth-bg.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
