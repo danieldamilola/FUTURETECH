@@ -1,5 +1,7 @@
-import { PagePlaceholder } from '@/components/layout/page-placeholder'
-export const metadata = { title: 'Write' }
+import { NewPostForm } from './new-post-form'
+
+export const metadata = { title: 'Write an Article | FutureTech' }
+
 export default function NewPostPage() {
-  return <PagePlaceholder title="Write an Article" description="The rich text editor is coming soon." icon="✍️" />
+  return <NewPostForm />
 }

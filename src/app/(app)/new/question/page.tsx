@@ -1,5 +1,7 @@
-import { PagePlaceholder } from '@/components/layout/page-placeholder'
-export const metadata = { title: 'Ask a Question' }
+import { NewQuestionForm } from './new-question-form'
+
+export const metadata = { title: 'Ask a Question | FutureTech' }
+
 export default function NewQuestionPage() {
-  return <PagePlaceholder title="Ask a Question" description="Post your technical question to the community." icon="🙋" />
+  return <NewQuestionForm />
 }
