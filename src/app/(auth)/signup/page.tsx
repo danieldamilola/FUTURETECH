@@ -47,7 +47,9 @@ export default function SignupPage() {
         <form action={signInWithGoogle}>
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2.5 rounded-xl px-4 py-2.5 text-[13px] font-medium border border-border/60 bg-card text-foreground hover:bg-muted transition-colors"
+            disabled
+            title="Google login is temporarily disabled"
+            className="w-full flex items-center justify-center gap-2.5 rounded-xl px-4 py-2.5 text-[13px] font-medium border border-border/60 bg-card text-foreground opacity-50 cursor-not-allowed transition-colors"
           >
             <GoogleIcon />
             Continue with Google

@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { login, signInWithGoogle, signInWithGitHub } from '@/app/actions/auth'
 import type { AuthFormState } from '@/app/actions/auth'
 
@@ -26,8 +27,10 @@ function GoogleIcon() {
 
 const initialState: AuthFormState = undefined
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, action, pending] = useActionState(login, initialState)
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get('error')
 
   return (
     <div className="w-full max-w-sm rounded-2xl p-8 border border-border/60 bg-card shadow-sm">
@@ -47,7 +50,9 @@ export default function LoginPage() {
         <form action={signInWithGoogle}>
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2.5 rounded-xl px-4 py-2.5 text-[13px] font-medium border border-border/60 bg-card text-foreground hover:bg-muted transition-colors"
+            disabled
+            title="Google login is temporarily disabled"
+            className="w-full flex items-center justify-center gap-2.5 rounded-xl px-4 py-2.5 text-[13px] font-medium border border-border/60 bg-card text-foreground opacity-50 cursor-not-allowed transition-colors"
           >
             <GoogleIcon />
             Continue with Google
@@ -71,7 +76,12 @@ export default function LoginPage() {
         <div className="flex-1 h-px bg-border/60" />
       </div>
 
-      {/* General Error */}
+      {/* Errors */}
+      {urlError && (
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 px-4 py-3 mb-5 text-[13px] font-medium text-center">
+          {urlError}
+        </div>
+      )}
       {state?.errors?.general && (
         <div className="rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 px-4 py-3 mb-5 text-[13px] font-medium text-center">
           {state.errors.general[0]}
@@ -138,5 +148,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="w-full max-w-sm p-8 text-center text-sm">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }
