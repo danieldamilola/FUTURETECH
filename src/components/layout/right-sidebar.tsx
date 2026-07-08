@@ -1,28 +1,16 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { TrendingUp, Users, Mic, Star, Award, PenLine, Rss } from 'lucide-react'
 import { Avatar } from '../ui/avatar'
 import { Tag } from '../ui/tag'
+import { createClient } from '@/lib/supabase/client'
 
-// Placeholder data until we hook up Supabase
-const trendingTags = [
-  { name: 'React', posts: 1420 },
-  { name: 'Nextjs', posts: 890 },
-  { name: 'SystemDesign', posts: 654 },
-  { name: 'TypeScript', posts: 1120 }
-]
-
-const topAuthors = [
-  { initials: 'AD', name: 'Amara Diallo', verified: true, bio: 'Senior Engineer at Stripe', followers: '12.4k' },
-  { initials: 'MW', name: 'Marcus Webb', verified: false, bio: 'Frontend architect', followers: '8.2k' }
-]
-
-const jobListings = [
-  { id: 1, slug: 'VER', role: 'Frontend Engineer', company: 'Vercel', dept: 'Engineering', locationType: 'Remote', featured: true },
-  { id: 2, slug: 'STR', role: 'Backend Developer', company: 'Stripe', dept: 'Engineering', locationType: 'Hybrid', featured: false }
-]
+// Will be populated by Supabase
+type TrendingTag = { name: string; posts: number }
+type TopAuthor = { id: string; name: string; initials: string; bio: string; verified: boolean; followers: number }
+type JobListing = { id: string; slug: string; role: string; company: string; dept: string; locationType: string; featured: boolean }
 
 const companyBg: Record<string, string> = {
   VER: '#000000',
@@ -38,6 +26,51 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function RightSidebar() {
+  const [trendingTags, setTrendingTags] = useState<TrendingTag[]>([])
+  const [topAuthors, setTopAuthors] = useState<TopAuthor[]>([])
+  const [jobListings, setJobListings] = useState<JobListing[]>([])
+
+  useEffect(() => {
+    async function fetchSidebarData() {
+      const supabase = createClient()
+      
+      // Fetch some authors
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, display_name, bio, followers_count, verified')
+        .order('followers_count', { ascending: false })
+        .limit(3)
+        
+      if (profiles) {
+        setTopAuthors(profiles.map(p => ({
+          id: p.id,
+          name: p.display_name,
+          initials: p.display_name.substring(0, 2).toUpperCase(),
+          bio: p.bio || 'Tech enthusiast',
+          verified: p.verified || false,
+          followers: p.followers_count || 0
+        })))
+      }
+
+      // Fetch tags from articles (this is a simplified aggregation since Supabase RPC is better, but we do client side for now)
+      const { data: articles } = await supabase.from('articles').select('tags').eq('is_draft', false)
+      if (articles) {
+        const tagCounts: Record<string, number> = {}
+        articles.forEach(a => {
+          (a.tags || []).forEach((t: string) => {
+            tagCounts[t] = (tagCounts[t] || 0) + 1
+          })
+        })
+        const sortedTags = Object.entries(tagCounts)
+          .map(([name, posts]) => ({ name, posts }))
+          .sort((a, b) => b.posts - a.posts)
+          .slice(0, 5)
+        setTrendingTags(sortedTags)
+      }
+    }
+    fetchSidebarData()
+  }, [])
+
   return (
     <aside className="hidden xl:flex flex-col gap-12 w-80 flex-shrink-0 pt-2 pb-10 pr-6">
       <div>
