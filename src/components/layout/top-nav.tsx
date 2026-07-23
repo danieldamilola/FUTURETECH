@@ -76,10 +76,12 @@ export function TopNav() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    const supabase = createClient();
+    await supabase.auth.signOut(); // Clear client-side local storage & session
+    await signOut(); // Clear server-side cookies just to be safe
     setIsLoggedIn(false);
     setUserProfile(null);
-    router.push("/feed");
+    router.push("/");
     router.refresh();
   };
 

@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/lib/actions/auth";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { cn } from "@/lib/utils";
 import {
@@ -26,6 +27,7 @@ import {
 
 export function MobileNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null);
@@ -55,8 +57,10 @@ export function MobileNav() {
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    await signOut(); // Clear server cookies
     setIsDrawerOpen(false);
-    window.location.reload();
+    router.push("/");
+    router.refresh();
   };
 
   const navItems = [
