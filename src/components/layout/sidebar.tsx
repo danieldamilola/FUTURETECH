@@ -37,7 +37,7 @@ const yoursNav = [
 ];
 
 const publishNav = [
-  { name: "Write Article", href: "/new/post", icon: PenLine },
+  { name: "Write Article", href: "/new/article", icon: PenLine },
   { name: "Ask Question", href: "/new/question", icon: HelpCircle },
   { name: "Start a Show", href: "/new/podcast", icon: Mic },
 ];
@@ -109,8 +109,8 @@ export function Sidebar() {
 
             <p className="text-[10px] text-[var(--ink-muted)] leading-relaxed pt-2 border-t border-[var(--border)]">
               By continuing, you agree to our{" "}
-              <a href="#" className="underline text-[var(--accent)] hover:text-[var(--ink)]">User Agreement</a> and acknowledge that you understand the{" "}
-              <a href="#" className="underline text-[var(--accent)] hover:text-[var(--ink)]">Privacy Policy</a>.
+              <a href="/terms" className="underline text-[var(--accent)] hover:text-[var(--ink)]">User Agreement</a> and acknowledge that you understand the{" "}
+              <a href="/privacy" className="underline text-[var(--accent)] hover:text-[var(--ink)]">Privacy Policy</a>.
             </p>
           </div>
         </aside>

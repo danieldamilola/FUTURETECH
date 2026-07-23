@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { updateProfile } from "@/lib/actions/profile";
+import { updateMentorMode } from "@/lib/actions/mentors";
 
 type Tab = "profile" | "security" | "notifications" | "api-keys" | "billing";
 
@@ -52,6 +53,11 @@ function ProfileTab() {
     twitter: "",
     linkedin: "",
     avatarUrl: "",
+    is_mentor: false,
+    mentor_headline: "",
+    mentor_hourly_rate: 0,
+    mentor_bio: "",
+    mentor_is_accepting_sessions: true,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -65,6 +71,8 @@ function ProfileTab() {
       if (!user) return;
       
       const { data: profile } = await (supabase.from("profiles") as any).select("*").eq("id", user.id).single();
+      const { data: mentorProfile } = await (supabase.from("mentor_profiles") as any).select("*").eq("user_id", user.id).maybeSingle();
+
       if (profile) {
         setForm({
           displayName: profile.display_name || "",
@@ -77,6 +85,11 @@ function ProfileTab() {
           twitter: profile.twitter_url || "",
           linkedin: profile.linkedin_url || "",
           avatarUrl: profile.avatar_url || "",
+          is_mentor: profile.is_mentor || false,
+          mentor_headline: mentorProfile?.headline || "",
+          mentor_hourly_rate: (mentorProfile?.hourly_rate_cents || 0) / 100,
+          mentor_bio: mentorProfile?.bio || "",
+          mentor_is_accepting_sessions: mentorProfile?.is_accepting_sessions !== false,
         });
       }
       setLoading(false);
@@ -105,9 +118,17 @@ function ProfileTab() {
       avatarUrl: form.avatarUrl,
     });
 
+    const mentorResult = await updateMentorMode({
+      is_mentor: form.is_mentor,
+      headline: form.mentor_headline,
+      hourly_rate_cents: Math.round(form.mentor_hourly_rate * 100),
+      bio: form.mentor_bio,
+      is_accepting_sessions: form.mentor_is_accepting_sessions,
+    });
+
     setSaving(false);
-    if (!result.success) {
-      setError(result.error || "Failed to save profile.");
+    if (!result.success || !mentorResult.success) {
+      setError((result as any).error || (mentorResult as any).error || "Failed to save profile.");
     } else {
       setSaved("Profile saved successfully!");
       setTimeout(() => setSaved(null), 3000);
@@ -225,6 +246,89 @@ function ProfileTab() {
             <input type="url" value={form.linkedin} onChange={set("linkedin")} placeholder="https://linkedin.com/in/username" className={inputCls} />
           </div>
         </div>
+      </div>
+
+      {/* Mentor Mode */}
+      <div className={sectionCls}>
+        <SectionTitle>Mentor Mode</SectionTitle>
+        <div className="flex items-center justify-between py-1">
+          <div>
+            <p className="text-[var(--ink)] font-medium">Enable Mentor Profile</p>
+            <p className="text-[var(--ink-muted)] text-[11px] mt-0.5">Allow other users to book mentorship sessions with you.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setForm(p => ({ ...p, is_mentor: !p.is_mentor }))}
+            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer shrink-0 ${
+              form.is_mentor ? "bg-[var(--accent)]" : "bg-[var(--surface-high)]"
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+                form.is_mentor ? "translate-x-4" : "translate-x-0.5"
+              }`}
+            />
+          </button>
+        </div>
+
+        {form.is_mentor && (
+          <div className="space-y-4 pt-3 border-t border-[var(--border)] mt-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Headline</label>
+                <input
+                  type="text"
+                  required
+                  value={form.mentor_headline}
+                  onChange={set("mentor_headline")}
+                  placeholder="e.g. Senior Frontend Engineer at TechCorp"
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Hourly Rate ($)</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="1"
+                  value={form.mentor_hourly_rate}
+                  onChange={(e) => setForm(p => ({ ...p, mentor_hourly_rate: parseFloat(e.target.value) || 0 }))}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>Mentor Bio</label>
+              <textarea
+                rows={3}
+                required
+                value={form.mentor_bio}
+                onChange={set("mentor_bio")}
+                placeholder="What can you help mentees with?"
+                className={`${inputCls} resize-none`}
+              />
+            </div>
+            <div className="flex items-center justify-between py-1 bg-[var(--surface-high)] px-3 rounded-[var(--radius-sm)]">
+              <div>
+                <p className="text-[var(--ink)] font-medium text-xs">Accepting Sessions</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm(p => ({ ...p, mentor_is_accepting_sessions: !p.mentor_is_accepting_sessions }))}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors cursor-pointer shrink-0 ${
+                  form.mentor_is_accepting_sessions ? "bg-[var(--accent)]" : "bg-[var(--surface-high)] border border-[var(--border)]"
+                }`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform shadow-sm ${
+                    form.mentor_is_accepting_sessions ? "translate-x-4" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end">

@@ -44,6 +44,8 @@ export default async function ProfilePage({
     .eq("username", username)
     .single();
 
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
+
   if (!profile) {
     notFound();
   }
@@ -116,10 +118,11 @@ export default async function ProfilePage({
                   @{profile.username}
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
-                <FollowButton targetType="user" targetId={profile.id} initialFollowing={false} size="sm" />
-              </div>
+              {(!currentUser || currentUser.id !== profile.id) && (
+                <div className="flex items-center gap-2">
+                  <FollowButton targetType="user" targetId={profile.id} initialFollowing={false} size="sm" />
+                </div>
+              )}
             </div>
 
             {profile.bio && (
@@ -143,13 +146,19 @@ export default async function ProfilePage({
               {profile.github_url && (
                 <a href={profile.github_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-[var(--ink)] transition-colors">
                   <Link2 className="w-3.5 h-3.5 opacity-70" />
-                  GitHub
+                  {profile.github_url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
                 </a>
               )}
               {profile.website_url && (
                 <a href={profile.website_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-[var(--ink)] transition-colors">
                   <Globe className="w-3.5 h-3.5 opacity-70" />
-                  Website
+                  {profile.website_url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                </a>
+              )}
+              {profile.twitter_url && (
+                <a href={profile.twitter_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-[var(--ink)] transition-colors">
+                  <Link2 className="w-3.5 h-3.5 opacity-70" />
+                  {profile.twitter_url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
                 </a>
               )}
               {profile.linkedin_url && (

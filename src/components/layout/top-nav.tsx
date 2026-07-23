@@ -149,7 +149,7 @@ export function TopNav() {
                   >
                     <DropdownMenu.Item asChild>
                       <Link
-                        href="/new/post"
+                        href="/new/article"
                         className="flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-high)] cursor-pointer outline-none transition-colors"
                       >
                         <PenLine className="w-3.5 h-3.5 text-[var(--accent)]" />

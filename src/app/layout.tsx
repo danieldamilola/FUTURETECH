@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { RightSidebar } from "@/components/layout/right-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { CommandPalette } from "@/components/ui/command-palette";
+import { OnboardingModal } from "@/components/modals/onboarding-modal";
 
 export const metadata: Metadata = {
   title: "FutureTech — The Developer Platform",
@@ -30,6 +31,7 @@ export default function RootLayout({
           </div>
           <MobileNav />
           <CommandPalette />
+          <OnboardingModal />
         </div>
       </body>
     </html>

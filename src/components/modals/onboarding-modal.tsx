@@ -38,8 +38,9 @@ const INTEREST_OPTIONS = [
 const inputCls =
   "w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--ink)] text-xs focus:outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--ink-faint)]";
 
-export default function OnboardingPage() {
+export function OnboardingModal() {
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<Step>(1);
 
   // Step 1 — Profile
@@ -62,21 +63,36 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Pre-fill display_name from auth session (OAuth users get it from GitHub)
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.push("/feed");
-        return;
-      }
-      const meta = user.user_metadata;
-      if (meta?.full_name && !displayName) setDisplayName(meta.full_name);
-      if (meta?.user_name && !username) setUsername(meta.user_name);
-      if (meta?.avatar_url && !avatarUrl) setAvatarUrl(meta.avatar_url);
+      if (!user) return;
+      
+      supabase
+        .from("profiles")
+        .select("onboarded, display_name, username, avatar_url")
+        .eq("id", user.id)
+        .single()
+        .then(({ data: profile }: { data: any }) => {
+          if (profile && profile.onboarded === false) {
+            setIsOpen(true);
+            
+            // Pre-fill from profile or auth session metadata
+            if (profile.display_name && !displayName) setDisplayName(profile.display_name);
+            if (profile.username && !username) setUsername(profile.username);
+            if (profile.avatar_url && !avatarUrl) setAvatarUrl(profile.avatar_url);
+
+            const meta = user.user_metadata;
+            if (meta?.full_name && !displayName && !profile.display_name) setDisplayName(meta.full_name);
+            if (meta?.user_name && !username && !profile.username) setUsername(meta.user_name);
+            if (meta?.avatar_url && !avatarUrl && !profile.avatar_url) setAvatarUrl(meta.avatar_url);
+          }
+        });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!isOpen) return null;
 
   const toggleInterest = (id: string) => {
     setInterests((prev) =>
@@ -93,21 +109,24 @@ export default function OnboardingPage() {
     setIsSubmitting(true);
 
     const result = await completeOnboarding({
+      displayName,
+      username,
       bio,
+      avatarUrl,
       websiteUrl,
       githubUrl,
       twitterUrl: twitterUrl || undefined,
       linkedinUrl: linkedinUrl || undefined,
       location: location || undefined,
       techStack,
-    } as Parameters<typeof completeOnboarding>[0]);
+    });
 
     setIsSubmitting(false);
 
     if (!result.success) {
       setError(result.error ?? "Something went wrong. Please try again.");
     } else {
-      router.push("/feed");
+      setIsOpen(false);
       router.refresh();
     }
   };
@@ -133,26 +152,29 @@ export default function OnboardingPage() {
   const currentStep = stepTitles[step];
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] flex items-start justify-center pt-12 pb-16 px-4">
-      <div className="w-full max-w-lg">
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 overflow-y-auto backdrop-blur-sm">
+      <div className="w-full max-w-lg my-8 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-widest mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            FutureTech
+        <div className="text-center mb-8 bg-[var(--surface)] p-6 rounded-[var(--radius-lg)] shadow-xl border border-[var(--border)] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/10 to-transparent pointer-events-none" />
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] uppercase tracking-widest mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              FutureTech
+            </div>
+            <h1 className="text-xl font-bold text-[var(--ink)] mb-1">Welcome to the community</h1>
+            <p className="text-xs text-[var(--ink-muted)]">
+              Take 60 seconds to set up your developer profile. You can update everything in Settings later.
+            </p>
           </div>
-          <h1 className="text-xl font-bold text-[var(--ink)] mb-1">Welcome to the community</h1>
-          <p className="text-xs text-[var(--ink-muted)]">
-            Take 60 seconds to set up your developer profile. You can update everything in Settings later.
-          </p>
         </div>
 
         {/* Step Progress */}
-        <div className="flex items-center justify-center gap-2 mb-8">
+        <div className="flex items-center justify-center gap-2 mb-6">
           {([1, 2, 3] as Step[]).map((s) => (
             <React.Fragment key={s}>
               <div
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-sm)] text-[11px] font-medium transition-all cursor-default ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-sm)] text-[11px] font-medium transition-all cursor-default shadow-sm ${
                   step === s
                     ? "bg-[var(--accent)] text-[var(--bg)]"
                     : step > s
@@ -177,42 +199,43 @@ export default function OnboardingPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border)] overflow-hidden">
+        <div className="rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border)] overflow-hidden shadow-2xl">
           {/* Card Header */}
-          <div className="px-6 py-4 border-b border-[var(--border)] flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[var(--radius-sm)] bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center">
+          <div className="px-6 py-4 border-b border-[var(--border)] flex items-center gap-3 bg-[var(--bg)]/50">
+            <div className="w-8 h-8 rounded-[var(--radius-sm)] bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center shadow-sm">
               {currentStep.icon}
             </div>
             <div>
               <h2 className="text-sm font-bold text-[var(--ink)]">{currentStep.title}</h2>
               <p className="text-[11px] text-[var(--ink-muted)]">{currentStep.subtitle}</p>
             </div>
-            <div className="ml-auto text-[11px] font-mono-numbers text-[var(--ink-muted)]">
+            <div className="ml-auto text-[11px] font-mono-numbers text-[var(--ink-muted)] bg-[var(--surface-high)] px-2 py-1 rounded">
               {step} / 3
             </div>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="mx-6 mt-4 p-2.5 rounded-[var(--radius-sm)] bg-[var(--downvote-soft)] border border-[var(--downvote)] text-[var(--downvote)] text-xs">
+            <div className="mx-6 mt-4 p-2.5 rounded-[var(--radius-sm)] bg-[var(--downvote-soft)] border border-[var(--downvote)] text-[var(--downvote)] text-xs flex items-center gap-2">
+              <div className="w-1 h-full bg-[var(--downvote)] rounded-full shrink-0" />
               {error}
             </div>
           )}
 
           {/* ── STEP 1: Profile ── */}
           {step === 1 && (
-            <div className="p-6 space-y-4 text-xs">
+            <div className="p-6 space-y-4 text-xs animate-in slide-in-from-right-4 duration-300">
               {/* Avatar */}
               <div className="flex items-center gap-4">
                 <div className="relative shrink-0">
-                  <div className="w-16 h-16 rounded-full bg-[var(--bg)] border-2 border-[var(--border)] flex items-center justify-center overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-[var(--bg)] border-2 border-[var(--border)] flex items-center justify-center overflow-hidden shadow-sm">
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-6 h-6 text-[var(--ink-muted)] opacity-40" />
                     )}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[var(--surface-high)] border border-[var(--border)] flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[var(--surface-high)] border border-[var(--border)] flex items-center justify-center shadow-sm">
                     <Camera className="w-2.5 h-2.5 text-[var(--ink-muted)]" />
                   </div>
                 </div>
@@ -289,7 +312,7 @@ export default function OnboardingPage() {
                   setError(null);
                   setStep(2);
                 }}
-                className="w-full py-2.5 bg-[var(--accent)] text-[var(--bg)] font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 bg-[var(--accent)] text-[var(--bg)] font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg"
               >
                 Continue
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -299,7 +322,7 @@ export default function OnboardingPage() {
 
           {/* ── STEP 2: Links ── */}
           {step === 2 && (
-            <div className="p-6 space-y-3 text-xs">
+            <div className="p-6 space-y-3 text-xs animate-in slide-in-from-right-4 duration-300">
               <div className="grid grid-cols-1 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-[var(--ink-muted)] uppercase tracking-wide mb-1">
@@ -378,7 +401,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)] rounded-[var(--radius-sm)] transition-colors cursor-pointer text-xs"
+                  className="flex items-center gap-1.5 px-4 py-2.5 border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--surface-hover)] rounded-[var(--radius-sm)] transition-colors cursor-pointer text-xs"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Back
@@ -386,7 +409,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => { setError(null); setStep(3); }}
-                  className="flex-1 py-2.5 bg-[var(--accent)] text-[var(--bg)] font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 bg-[var(--accent)] text-[var(--bg)] font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg"
                 >
                   Continue
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -397,7 +420,7 @@ export default function OnboardingPage() {
 
           {/* ── STEP 3: Tech Stack ── */}
           {step === 3 && (
-            <div className="p-6 space-y-5 text-xs">
+            <div className="p-6 space-y-5 text-xs animate-in slide-in-from-right-4 duration-300">
               {/* Interests */}
               <div>
                 <label className="block text-[11px] font-semibold text-[var(--ink-muted)] uppercase tracking-wide mb-2">
@@ -411,7 +434,7 @@ export default function OnboardingPage() {
                       onClick={() => toggleInterest(opt.id)}
                       className={`px-2.5 py-1 rounded-[var(--radius-sm)] border text-[11px] font-medium transition-colors cursor-pointer ${
                         interests.includes(opt.id)
-                          ? "bg-[var(--accent)] text-[var(--bg)] border-transparent"
+                          ? "bg-[var(--accent)] text-[var(--bg)] border-transparent shadow-sm"
                           : "bg-[var(--bg)] text-[var(--ink-muted)] border-[var(--border)] hover:border-[var(--accent)]/50 hover:text-[var(--ink)]"
                       }`}
                     >
@@ -439,7 +462,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)] rounded-[var(--radius-sm)] transition-colors cursor-pointer text-xs"
+                  className="flex items-center gap-1.5 px-4 py-2.5 border border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--surface-hover)] rounded-[var(--radius-sm)] transition-colors cursor-pointer text-xs"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Back
@@ -448,7 +471,7 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={handleFinish}
                   disabled={isSubmitting}
-                  className="flex-1 py-2.5 bg-[var(--accent)] text-[var(--bg)] font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 bg-[var(--accent)] text-[var(--bg)] font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg"
                 >
                   {isSubmitting ? (
                     "Saving profile..."
@@ -468,8 +491,8 @@ export default function OnboardingPage() {
         <div className="text-center mt-4">
           <button
             type="button"
-            onClick={() => router.push("/feed")}
-            className="text-[11px] text-[var(--ink-faint)] hover:text-[var(--ink-muted)] transition-colors cursor-pointer"
+            onClick={() => setIsOpen(false)}
+            className="text-[11px] text-[var(--ink-faint)] hover:text-[var(--ink-muted)] transition-colors cursor-pointer inline-flex items-center gap-1 bg-[var(--surface)] px-3 py-1.5 rounded-full border border-[var(--border)]"
           >
             Skip for now — I&apos;ll complete this later in Settings
           </button>
