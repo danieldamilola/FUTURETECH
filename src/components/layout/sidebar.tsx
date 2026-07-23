@@ -43,7 +43,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signup");
+  const [authModalMode, setAuthModalMode] = useState<"signin" | "signup">("signin");
 
   useEffect(() => {
     const supabase = createClient();
@@ -60,22 +60,12 @@ export function Sidebar() {
     };
   }, []);
 
-  const handleGitHubAuth = async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-  };
-
-  const openEmailModal = (mode: "signin" | "signup") => {
+  const openAuthOverlay = (mode: "signin" | "signup") => {
     setAuthModalMode(mode);
     setIsAuthModalOpen(true);
   };
 
-  // LOGGED OUT STATE: Render Auth Card inside left sidebar (No feeds/reading/community links)
+  // LOGGED OUT STATE: Render Auth Hero Card in sidebar; clicking either button triggers AuthModal overlay
   if (!isLoggedIn) {
     return (
       <>
@@ -86,10 +76,10 @@ export function Sidebar() {
             </h2>
 
             <div className="space-y-2.5 pt-1">
-              {/* GitHub OAuth Button */}
+              {/* Continue with GitHub Button (Triggers Auth Overlay) */}
               <button
                 type="button"
-                onClick={handleGitHubAuth}
+                onClick={() => openAuthOverlay("signin")}
                 className="w-full py-2 px-3 bg-[#E7EAE6] hover:bg-white text-[#12151A] font-semibold text-xs rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
@@ -98,10 +88,10 @@ export function Sidebar() {
                 <span>Continue with GitHub</span>
               </button>
 
-              {/* Continue with Email Button */}
+              {/* Continue with Email Button (Triggers Auth Overlay) */}
               <button
                 type="button"
-                onClick={() => openEmailModal("signup")}
+                onClick={() => openAuthOverlay("signin")}
                 className="w-full py-2 px-3 bg-[#E7EAE6] hover:bg-white text-[#12151A] font-semibold text-xs rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <Mail className="w-4 h-4 text-[#12151A]" />
@@ -117,6 +107,7 @@ export function Sidebar() {
           </div>
         </aside>
 
+        {/* Auth Popup Modal Overlay */}
         <AuthModal
           isOpen={isAuthModalOpen}
           onOpenChange={setIsAuthModalOpen}
