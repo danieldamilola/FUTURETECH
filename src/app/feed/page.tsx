@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { VoteControl } from "@/components/ui/vote-control";
 import { ContentTag, ContentType } from "@/components/ui/content-tag";
 import { BookmarkButton } from "@/components/ui/bookmark-button";
+import { AuthModal } from "@/components/auth/auth-modal";
 import { cn } from "@/lib/utils";
 import { Share2 } from "lucide-react";
 
@@ -98,9 +100,23 @@ const mockFeedItems: FeedItem[] = [
 ];
 
 export default function FeedPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<"for-you" | "trending" | "recent">("for-you");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("authRequired") === "1") {
+      setIsAuthModalOpen(true);
+      // Clean the URL without a navigation
+      const url = new URL(window.location.href);
+      url.searchParams.delete("authRequired");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [searchParams]);
 
   return (
+    <>
     <div className="w-full">
       {/* Feed Sort Tabs */}
       <div className="flex items-center gap-6 border-b border-[var(--border)] pb-3 mb-4 text-xs">
@@ -192,5 +208,11 @@ export default function FeedPage() {
         ))}
       </div>
     </div>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onOpenChange={setIsAuthModalOpen}
+        defaultMode="signin"
+      />
+    </>
   );
 }

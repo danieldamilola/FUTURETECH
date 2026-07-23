@@ -30,15 +30,26 @@ export async function GET(request: Request) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    if (!error) {
-      return NextResponse.redirect(`${origin}/feed`);
+    if (!error && data.user) {
+      // Check if this user has completed onboarding
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarded")
+        .eq("id", data.user.id)
+        .single();
+
+      // New users (onboarded = false) → onboarding. Existing → feed.
+      const destination = profile?.onboarded === false ? "/onboarding" : "/feed";
+      return NextResponse.redirect(`${origin}${destination}`);
     }
 
-    return NextResponse.redirect(
-      `${origin}/feed?error=${encodeURIComponent(error.message)}`
-    );
+    if (error) {
+      return NextResponse.redirect(
+        `${origin}/feed?error=${encodeURIComponent(error.message)}`
+      );
+    }
   }
 
   if (errorReason) {

@@ -7,6 +7,8 @@ interface HashtagInputProps {
   tags: string[];
   onChange: (tags: string[]) => void;
   maxTags?: number;
+  suggestions?: string[];
+  placeholder?: string;
 }
 
 const defaultSuggestedTags = [
@@ -26,6 +28,8 @@ export function HashtagInput({
   tags,
   onChange,
   maxTags = 5,
+  suggestions,
+  placeholder = "Type to search or add a tag...",
 }: HashtagInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -53,7 +57,8 @@ export function HashtagInput({
     }
   };
 
-  const filteredSuggestions = defaultSuggestedTags.filter(
+  const tagPool = suggestions ?? defaultSuggestedTags;
+  const filteredSuggestions = tagPool.filter(
     (st) =>
       st.toLowerCase().includes(inputValue.toLowerCase().replace(/^#/, "")) &&
       !tags.some((t) => t.toLowerCase() === st.toLowerCase())

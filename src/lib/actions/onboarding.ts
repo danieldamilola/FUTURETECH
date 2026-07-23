@@ -5,19 +5,36 @@ import { createClient } from "@/lib/supabase/client";
 import { ActionResult, successResult, errorResult } from "./result";
 import { z } from "zod";
 
+const urlOrEmpty = z.string().url().or(z.literal("")).optional();
+
 const onboardingSchema = z.object({
+  displayName: z.string().min(2).max(64).optional(),
+  username: z
+    .string()
+    .min(3)
+    .max(24)
+    .regex(/^[a-z0-9_-]+$/, "Username can only contain lowercase letters, numbers, hyphens, and underscores.")
+    .optional(),
   bio: z.string().max(280, "Bio cannot exceed 280 characters.").optional(),
-  websiteUrl: z.string().url("Please enter a valid URL.").or(z.literal("")).optional(),
-  githubUrl: z.string().url("Please enter a valid GitHub URL.").or(z.literal("")).optional(),
-  twitterUrl: z.string().url("Please enter a valid Twitter/X URL.").or(z.literal("")).optional(),
-  techStack: z.array(z.string().max(24)).max(10, "Maximum 10 tech stack tags allowed.").optional(),
+  avatarUrl: urlOrEmpty,
+  websiteUrl: urlOrEmpty,
+  githubUrl: urlOrEmpty,
+  twitterUrl: urlOrEmpty,
+  linkedinUrl: urlOrEmpty,
+  location: z.string().max(100).optional(),
+  techStack: z.array(z.string().max(30)).max(15, "Maximum 15 tech stack tags allowed.").optional(),
 });
 
 export async function completeOnboarding(input: {
+  displayName?: string;
+  username?: string;
   bio?: string;
+  avatarUrl?: string;
   websiteUrl?: string;
   githubUrl?: string;
   twitterUrl?: string;
+  linkedinUrl?: string;
+  location?: string;
   techStack?: string[];
 }): Promise<ActionResult<void>> {
   try {
@@ -33,17 +50,39 @@ export async function completeOnboarding(input: {
     }
 
     const supabase = createClient();
+
+    // If username is being changed, check it's not taken
+    if (input.username) {
+      const { data: existing } = await (supabase.from("profiles") as any)
+        .select("id")
+        .eq("username", input.username)
+        .neq("id", user.id)
+        .maybeSingle();
+
+      if (existing) {
+        return errorResult("That username is already taken. Please choose another.");
+      }
+    }
+
+    const updates: Record<string, unknown> = {
+      bio: input.bio || null,
+      website_url: input.websiteUrl || null,
+      github_url: input.githubUrl || null,
+      twitter_url: input.twitterUrl || null,
+      linkedin_url: input.linkedinUrl || null,
+      tech_stack: input.techStack || [],
+      onboarded: true,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (input.displayName) updates.display_name = input.displayName;
+    if (input.username) updates.username = input.username;
+    if (input.avatarUrl) updates.avatar_url = input.avatarUrl;
+    if (input.location) updates.location = input.location;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from("profiles") as any)
-      .update({
-        bio: input.bio || null,
-        website_url: input.websiteUrl || null,
-        github_url: input.githubUrl || null,
-        twitter_url: input.twitterUrl || null,
-        tech_stack: input.techStack || [],
-        onboarded: true,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq("id", user.id);
 
     if (error) {
