@@ -1,7 +1,7 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { ActionResult, successResult, errorResult } from "./result";
 import { TargetType } from "@/types/database";
 
@@ -12,7 +12,7 @@ export async function toggleVote(
 ): Promise<ActionResult<{ userVote: number; upvotes: number; downvotes: number }>> {
   try {
     const user = await requireUser();
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Check existing vote
     const columnKey = `${targetType}_id`;

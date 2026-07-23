@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export type TargetType = "article" | "question" | "answer" | "comment" | "podcast";
@@ -10,7 +10,7 @@ export async function toggleVote(
   targetId: string,
   value: 1 | -1
 ): Promise<{ success: boolean; error?: string; newValue?: number }> {
-  const supabase = createClient() as any;
+  const supabase = (await createClient()) as any;
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

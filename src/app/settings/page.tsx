@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   User, Shield, Bell, Key, CreditCard,
   Save, CheckCircle2, Eye, EyeOff, Copy, Plus,
@@ -8,6 +8,8 @@ import {
   Mail, Lock, Smartphone, LogOut, X,
   MapPin, Link as LinkIcon, Camera
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { updateProfile } from "@/lib/actions/profile";
 
 type Tab = "profile" | "security" | "notifications" | "api-keys" | "billing";
 
@@ -40,29 +42,85 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 // --- Profile Tab ---
 function ProfileTab() {
   const [form, setForm] = useState({
-    displayName: "Alex Rivera",
-    username: "alex_rivera",
-    email: "alex@example.com",
-    bio: "Senior Fullstack Engineer & Systems Enthusiast. I write about Rust, TypeScript, and distributed systems.",
-    location: "San Francisco, CA",
-    website: "https://alexrivera.dev",
-    github: "https://github.com/alexrivera",
-    twitter: "https://x.com/alexrivera_dev",
+    displayName: "",
+    username: "",
+    email: "", // We might not be able to change email here without triggering Supabase auth email change
+    bio: "",
+    location: "",
+    website: "",
+    github: "",
+    twitter: "",
     linkedin: "",
     avatarUrl: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data: profile } = await (supabase.from("profiles") as any).select("*").eq("id", user.id).single();
+      if (profile) {
+        setForm({
+          displayName: profile.display_name || "",
+          username: profile.username || "",
+          email: user.email || "",
+          bio: profile.bio || "",
+          location: profile.location || "",
+          website: profile.website_url || "",
+          github: profile.github_url || "",
+          twitter: profile.twitter_url || "",
+          linkedin: profile.linkedin_url || "",
+          avatarUrl: profile.avatar_url || "",
+        });
+      }
+      setLoading(false);
+    };
+    fetchProfile();
+  }, []);
+
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [k]: e.target.value }));
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved("Profile saved successfully!");
-    setTimeout(() => setSaved(null), 3000);
+    setSaving(true);
+    setError(null);
+    setSaved(null);
+
+    const result = await updateProfile({
+      displayName: form.displayName,
+      username: form.username,
+      bio: form.bio,
+      location: form.location,
+      websiteUrl: form.website,
+      githubUrl: form.github,
+      twitterUrl: form.twitter,
+      linkedinUrl: form.linkedin,
+      avatarUrl: form.avatarUrl,
+    });
+
+    setSaving(false);
+    if (!result.success) {
+      setError(result.error || "Failed to save profile.");
+    } else {
+      setSaved("Profile saved successfully!");
+      setTimeout(() => setSaved(null), 3000);
+    }
   };
+
+  if (loading) {
+    return <div className="text-xs text-[var(--ink-muted)] py-8 animate-pulse">Loading profile...</div>;
+  }
 
   return (
     <form onSubmit={handleSave} className="space-y-5 text-xs">
+      {error && <div className="p-3 rounded-[var(--radius-sm)] bg-[var(--downvote-soft)] border border-[var(--downvote)] text-[var(--downvote)] text-xs">{error}</div>}
       <SaveBanner msg={saved} />
 
       {/* Avatar */}
@@ -73,7 +131,7 @@ function ProfileTab() {
             {form.avatarUrl ? (
               <img src={form.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              form.displayName.charAt(0).toUpperCase()
+              form.displayName ? form.displayName.charAt(0).toUpperCase() : "U"
             )}
           </div>
           <div className="flex-1 space-y-1.5">
@@ -119,7 +177,7 @@ function ProfileTab() {
               <Mail className="inline w-3 h-3 mr-1" />
               Email Address
             </label>
-            <input type="email" required value={form.email} onChange={set("email")} className={inputCls} />
+            <input type="email" readOnly value={form.email} className={`${inputCls} opacity-60 cursor-not-allowed`} title="Email cannot be changed here" />
           </div>
           <div>
             <label className={labelCls}>
@@ -172,10 +230,16 @@ function ProfileTab() {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="px-4 py-2 bg-[var(--accent)] text-[var(--bg)] font-semibold text-xs rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity flex items-center gap-1.5 cursor-pointer"
+          disabled={saving}
+          className="px-4 py-2 bg-[var(--accent)] text-[var(--bg)] font-semibold text-xs rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
         >
-          <Save className="w-3.5 h-3.5" />
-          Save Profile
+          {saving ? (
+             <svg className="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+             </svg>
+          ) : <Save className="w-3.5 h-3.5" />}
+          {saving ? "Saving..." : "Save Profile"}
         </button>
       </div>
     </form>
@@ -191,11 +255,7 @@ function SecurityTab() {
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
 
-  const sessions = [
-    { id: "s1", browser: "Chrome 128 on macOS", location: "San Francisco, CA", lastActive: "Now", isCurrent: true },
-    { id: "s2", browser: "Firefox 118 on Windows", location: "New York, NY", lastActive: "2 days ago", isCurrent: false },
-    { id: "s3", browser: "Safari on iPhone", location: "San Francisco, CA", lastActive: "4 days ago", isCurrent: false },
-  ];
+  const sessions: any[] = [];
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -439,18 +499,7 @@ function NotificationsTab() {
 type ApiKey = { id: string; name: string; key: string; createdAt: string; lastUsed: string; scopes: string[] };
 
 function ApiKeysTab() {
-  const [keys, setKeys] = useState<ApiKey[]>([
-    {
-      id: "k1", name: "Production Bot", key: "ft_live_sk_••••••••••••••••••••a8f2",
-      createdAt: "Jan 15, 2026", lastUsed: "2 hours ago",
-      scopes: ["articles:read", "articles:write", "questions:read"],
-    },
-    {
-      id: "k2", name: "CI Integration", key: "ft_live_sk_••••••••••••••••••••c3d9",
-      createdAt: "Dec 3, 2025", lastUsed: "5 days ago",
-      scopes: ["articles:read"],
-    },
-  ]);
+  const [keys, setKeys] = useState<ApiKey[]>([]);
   const [newKeyName, setNewKeyName] = useState("");
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
@@ -594,11 +643,7 @@ function BillingTab() {
   const [saved, setSaved] = useState<string | null>(null);
   const isPro = false;
 
-  const invoices = [
-    { id: "inv_001", date: "Jan 1, 2026", amount: "$9.00", status: "Paid", plan: "FutureTech Pro" },
-    { id: "inv_002", date: "Dec 1, 2025", amount: "$9.00", status: "Paid", plan: "FutureTech Pro" },
-    { id: "inv_003", date: "Nov 1, 2025", amount: "$9.00", status: "Paid", plan: "FutureTech Pro" },
-  ];
+  const invoices: any[] = [];
 
   return (
     <div className="space-y-5 text-xs">

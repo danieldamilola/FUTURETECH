@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { ActionResult, successResult, errorResult } from "./result";
 import { z } from "zod";
 
@@ -33,7 +33,7 @@ export async function signInWithEmail(formData: FormData): Promise<ActionResult<
     return errorResult("Invalid form input.", fieldErrors);
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -61,7 +61,7 @@ export async function signUpWithEmail(formData: FormData): Promise<ActionResult<
     return errorResult("Validation failed.", fieldErrors);
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -85,7 +85,7 @@ export async function signUpWithEmail(formData: FormData): Promise<ActionResult<
 }
 
 export async function signOut(): Promise<ActionResult<void>> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signOut();
   if (error) return errorResult(error.message);
   return successResult(undefined);

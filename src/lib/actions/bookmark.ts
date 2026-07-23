@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export type BookmarkTargetType = "article" | "question" | "podcast";
@@ -9,7 +9,7 @@ export async function toggleBookmark(
   targetType: BookmarkTargetType,
   targetId: string
 ): Promise<{ success: boolean; isBookmarked?: boolean; error?: string }> {
-  const supabase = createClient() as any;
+  const supabase = await createClient() as any;
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

@@ -1,7 +1,7 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { ActionResult, successResult, errorResult } from "./result";
 import { applyMentorSchema, bookSessionSchema } from "@/lib/validation/mentorship";
 
@@ -23,7 +23,7 @@ export async function applyAsMentor(input: {
       return errorResult("Validation error.", fieldErrors);
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from("mentor_profiles") as any)
       .upsert({
@@ -71,7 +71,7 @@ export async function bookSession(input: {
       return errorResult("Validation error.", fieldErrors);
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from("mentorship_sessions") as any)
       .insert({

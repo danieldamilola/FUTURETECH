@@ -1,7 +1,7 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { ActionResult, successResult, errorResult } from "./result";
 import { createAnswerSchema } from "@/lib/validation/question";
 
@@ -22,7 +22,7 @@ export async function createAnswer(input: {
       return errorResult("Validation error.", fieldErrors);
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from("answers") as any)
       .insert({
@@ -52,7 +52,7 @@ export async function acceptAnswer(
 ): Promise<ActionResult<{ isResolved: boolean; acceptedAnswerId: string }>> {
   try {
     const user = await requireUser();
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Verify user is the author of the question
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

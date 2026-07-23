@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export type FollowTargetType = "user" | "tag";
@@ -8,7 +8,7 @@ export type FollowTargetType = "user" | "tag";
 export async function toggleUserFollow(
   targetUserId: string
 ): Promise<{ success: boolean; isFollowing?: boolean; error?: string }> {
-  const supabase = createClient() as any;
+  const supabase = (await createClient()) as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,7 +41,7 @@ export async function toggleUserFollow(
 export async function toggleShowFollow(
   showId: string
 ): Promise<{ success: boolean; isFollowing?: boolean; error?: string }> {
-  const supabase = createClient() as any;
+  const supabase = (await createClient()) as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -70,7 +70,7 @@ export async function toggleShowFollow(
 export async function getFollowCounts(
   userId: string
 ): Promise<{ followers: number; following: number }> {
-  const supabase = createClient() as any;
+  const supabase = (await createClient()) as any;
 
   const [{ count: followers }, { count: following }] = await Promise.all([
     supabase
@@ -89,7 +89,7 @@ export async function getFollowCounts(
 export async function isFollowingUser(
   targetUserId: string
 ): Promise<boolean> {
-  const supabase = createClient() as any;
+  const supabase = (await createClient()) as any;
   const {
     data: { user },
   } = await supabase.auth.getUser();

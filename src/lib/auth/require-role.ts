@@ -1,8 +1,8 @@
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { UserRole } from "@/types/database";
 
 export async function requireRole(allowedRoles: UserRole[]) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {

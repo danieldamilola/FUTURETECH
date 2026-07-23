@@ -1,7 +1,7 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { ActionResult, successResult, errorResult } from "./result";
 import { z } from "zod";
 
@@ -49,7 +49,7 @@ export async function completeOnboarding(input: {
       return errorResult("Validation error.", fieldErrors);
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // If username is being changed, check it's not taken
     if (input.username) {

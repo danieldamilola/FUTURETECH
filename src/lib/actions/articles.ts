@@ -1,7 +1,7 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { ActionResult, successResult, errorResult } from "./result";
 import { createArticleSchema } from "@/lib/validation/article";
 
@@ -37,7 +37,7 @@ export async function createArticle(input: {
     const wordCount = input.contentHtml.replace(/<[^>]*>/g, "").split(/\s+/).length;
     const readTimeMins = Math.max(1, Math.ceil(wordCount / 200));
 
-    const supabase = createClient();
+    const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from("articles") as any)
       .insert({
@@ -68,7 +68,7 @@ export async function createArticle(input: {
 export async function deleteArticle(articleId: string): Promise<ActionResult<void>> {
   try {
     const user = await requireUser();
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from("articles") as any)

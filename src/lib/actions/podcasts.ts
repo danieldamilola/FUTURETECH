@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function createPodcastShow(input: {
@@ -10,7 +10,7 @@ export async function createPodcastShow(input: {
   category: string;
   coverImageUrl?: string;
 }): Promise<{ success: boolean; data?: { id: string; slug: string }; error?: string }> {
-  const supabase = createClient() as any;
+  const supabase = (await createClient()) as any;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "You must be signed in." };
 
@@ -44,7 +44,7 @@ export async function createPodcastEpisode(input: {
   showNotesHtml?: string;
   coverImageUrl?: string;
 }): Promise<{ success: boolean; data?: { id: string }; error?: string }> {
-  const supabase = createClient() as any;
+  const supabase = (await createClient()) as any;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "You must be signed in." };
 
