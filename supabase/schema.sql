@@ -106,6 +106,75 @@ ALTER TABLE questions
   ADD CONSTRAINT fk_questions_accepted_answer 
   FOREIGN KEY (accepted_answer_id) REFERENCES answers(id) ON DELETE SET NULL;
 
+-- Comments
+CREATE TABLE comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
+  question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
+  answer_id UUID REFERENCES answers(id) ON DELETE CASCADE,
+  parent_comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  upvotes_count INT DEFAULT 0 NOT NULL,
+  downvotes_count INT DEFAULT 0 NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Podcasts
+CREATE TABLE podcasts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT NOT NULL,
+  audio_url TEXT NOT NULL,
+  duration_seconds INT NOT NULL,
+  show_notes_html TEXT,
+  published_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Jobs
+CREATE TABLE jobs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_name TEXT NOT NULL,
+  company_logo_url TEXT,
+  title TEXT NOT NULL,
+  location TEXT NOT NULL,
+  employment_type employment_type DEFAULT 'full_time' NOT NULL,
+  salary_range TEXT,
+  apply_url TEXT NOT NULL,
+  description_html TEXT NOT NULL,
+  status job_status DEFAULT 'active' NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Mentor Profiles
+CREATE TABLE mentor_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  headline TEXT NOT NULL,
+  hourly_rate_cents INT DEFAULT 0 NOT NULL,
+  expertise_tags TEXT[] DEFAULT '{}'::TEXT[],
+  bio TEXT NOT NULL,
+  is_accepting_sessions BOOLEAN DEFAULT TRUE NOT NULL,
+  stripe_account_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+-- Mentorship Sessions
+CREATE TABLE mentorship_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mentee_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  mentor_id UUID NOT NULL REFERENCES mentor_profiles(id) ON DELETE CASCADE,
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  duration_mins INT DEFAULT 45 NOT NULL,
+  topic TEXT NOT NULL,
+  status session_status DEFAULT 'pending' NOT NULL,
+  stripe_transfer_id TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
 -- Votes (Typed Foreign Keys with ON DELETE CASCADE)
 CREATE TABLE votes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -185,6 +254,11 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE answers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE podcasts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mentor_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mentorship_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE votes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
 
@@ -193,6 +267,10 @@ CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT 
 CREATE POLICY "Published articles are viewable by everyone" ON articles FOR SELECT USING (status = 'published' OR auth.uid() = author_id);
 CREATE POLICY "Questions are viewable by everyone" ON questions FOR SELECT USING (true);
 CREATE POLICY "Answers are viewable by everyone" ON answers FOR SELECT USING (true);
+CREATE POLICY "Comments are viewable by everyone" ON comments FOR SELECT USING (true);
+CREATE POLICY "Podcasts are viewable by everyone" ON podcasts FOR SELECT USING (true);
+CREATE POLICY "Active jobs are viewable by everyone" ON jobs FOR SELECT USING (status = 'active');
+CREATE POLICY "Mentor profiles are viewable by everyone" ON mentor_profiles FOR SELECT USING (true);
 CREATE POLICY "User votes viewable by owner" ON votes FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "User bookmarks viewable by owner" ON bookmarks FOR SELECT USING (auth.uid() = user_id);
 
@@ -204,5 +282,6 @@ CREATE POLICY "Users can insert questions" ON questions FOR INSERT WITH CHECK (a
 CREATE POLICY "Users can update own questions" ON questions FOR UPDATE USING (auth.uid() = author_id);
 CREATE POLICY "Users can insert answers" ON answers FOR INSERT WITH CHECK (auth.uid() = author_id);
 CREATE POLICY "Users can update own answers" ON answers FOR UPDATE USING (auth.uid() = author_id);
+CREATE POLICY "Users can insert comments" ON comments FOR INSERT WITH CHECK (auth.uid() = author_id);
 CREATE POLICY "Users can manage own votes" ON votes FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users can manage own bookmarks" ON bookmarks FOR ALL USING (auth.uid() = user_id);
