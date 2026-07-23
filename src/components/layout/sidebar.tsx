@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   Rss,
@@ -38,6 +39,22 @@ const communityNav = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session?.user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const renderNavGroup = (title: string, items: typeof discoverNav) => (
     <div className="mb-5">
@@ -71,8 +88,15 @@ export function Sidebar() {
   return (
     <aside className="w-[220px] shrink-0 border-r border-[var(--border)] bg-[var(--bg)] sticky top-[56px] h-[calc(100vh-56px)] overflow-y-auto p-3 hidden md:block select-none">
       {renderNavGroup("Discover", discoverNav)}
-      <div className="my-3 border-t border-[var(--border)]" />
-      {renderNavGroup("Yours", yoursNav)}
+
+      {/* Show 'Yours' section only when Logged In */}
+      {isLoggedIn && (
+        <>
+          <div className="my-3 border-t border-[var(--border)]" />
+          {renderNavGroup("Yours", yoursNav)}
+        </>
+      )}
+
       <div className="my-3 border-t border-[var(--border)]" />
       {renderNavGroup("Community", communityNav)}
     </aside>
