@@ -1,32 +1,16 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { Compass, Hash } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 
-interface TagInfo {
-  name: string;
-  count: number;
-  description: string;
-}
+export default async function ExplorePage() {
+  const supabase = await createClient();
+  
+  const { data: tags } = await (supabase.from("tags") as any)
+    .select("id, name, slug, description")
+    .order("name", { ascending: true });
 
-const tagsList: TagInfo[] = [
-  { name: "TypeScript", count: 412, description: "Typed JavaScript at any scale." },
-  { name: "React", count: 389, description: "The library for web and native user interfaces." },
-  { name: "AI/ML", count: 301, description: "Artificial intelligence, machine learning, and LLM engineering." },
-  { name: "Rust", count: 244, description: "A language empowering everyone to build reliable and efficient software." },
-  { name: "WebAssembly", count: 212, description: "High-performance code execution in modern web browsers." },
-  { name: "Edge Computing", count: 184, description: "Running application logic close to the end user." },
-  { name: "PostgreSQL", count: 167, description: "The world's most advanced open-source relational database." },
-  { name: "Next.js", count: 155, description: "The React framework for the web." },
-];
-
-export default function ExplorePage() {
-  const [filter, setFilter] = useState("");
-
-  const filteredTags = tagsList.filter((t) =>
-    t.name.toLowerCase().includes(filter.toLowerCase())
-  );
+  const tagsList = tags || [];
 
   return (
     <div className="w-full space-y-6">
@@ -40,38 +24,32 @@ export default function ExplorePage() {
         </span>
       </div>
 
-      <div>
-        <input
-          type="search"
-          placeholder="Filter topics..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="w-full max-w-sm px-3 py-1.5 text-xs bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--ink)] placeholder-[var(--ink-muted)] focus:outline-none focus:border-[var(--accent)]"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {filteredTags.map((tag) => (
-          <Link
-            key={tag.name}
-            href={`/feed?tag=${tag.name}`}
-            className="p-3 rounded-[var(--radius-sm)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-colors block group"
-          >
-            <div className="flex items-center justify-between mb-1">
-              <div className="font-medium text-xs text-[var(--ink)] group-hover:text-[var(--accent)] transition-colors flex items-center gap-1">
-                <Hash className="w-3 h-3 text-[var(--accent)]" />
-                <span>{tag.name}</span>
+      {tagsList.length === 0 ? (
+        <div className="py-16 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)]">
+          <Compass className="w-8 h-8 mx-auto mb-3 text-[var(--ink-muted)] opacity-50" />
+          <p className="text-sm font-semibold text-[var(--ink)] mb-1">No topics yet.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {tagsList.map((tag: any) => (
+            <Link
+              key={tag.id}
+              href={`/feed?tag=${tag.slug}`}
+              className="p-3 rounded-[var(--radius-sm)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-colors block group"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <div className="font-medium text-xs text-[var(--ink)] group-hover:text-[var(--accent)] transition-colors flex items-center gap-1">
+                  <Hash className="w-3 h-3 text-[var(--accent)]" />
+                  <span>{tag.name}</span>
+                </div>
               </div>
-              <span className="font-mono-numbers text-[11px] text-[var(--ink-muted)]">
-                {tag.count} posts
-              </span>
-            </div>
-            <p className="text-[11px] text-[var(--ink-muted)] line-clamp-2">
-              {tag.description}
-            </p>
-          </Link>
-        ))}
-      </div>
+              <p className="text-[11px] text-[var(--ink-muted)] line-clamp-2">
+                {tag.description}
+              </p>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

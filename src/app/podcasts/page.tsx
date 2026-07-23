@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { AudioPlayer } from "@/components/podcasts/audio-player";
 import { BookmarkButton } from "@/components/ui/bookmark-button";
@@ -10,179 +8,29 @@ import {
   Play, Plus, Mic, ChevronRight, Flame
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// ── Types ──────────────────────────────────────────────────────
-interface PodcastShow {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  coverImageUrl: string;
-  category: string;
-  authorName: string;
-  authorUsername: string;
-  followersCount: number;
-  episodesCount: number;
-  isFollowing: boolean;
-}
-
-interface PodcastEpisode {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  audioUrl: string;
-  durationSeconds: number;
-  publishedAt: string;
-  showTitle: string;
-  showId: string;
-  authorName: string;
-  authorUsername: string;
-  playsCount: number;
-  coverImageUrl?: string;
-}
-
-// ── Mock Data ──────────────────────────────────────────────────
-const mockShows: PodcastShow[] = [
-  {
-    id: "show-1",
-    slug: "the-rust-runtime",
-    title: "The Rust Runtime",
-    description: "Deep dives into async Rust, memory safety patterns, and systems programming with the language that refuses to let you shoot yourself in the foot.",
-    coverImageUrl: "",
-    category: "Systems",
-    authorName: "Dae-Jung Kim",
-    authorUsername: "daejung_kim",
-    followersCount: 2840,
-    episodesCount: 34,
-    isFollowing: false,
-  },
-  {
-    id: "show-2",
-    slug: "typescript-uncovered",
-    title: "TypeScript Uncovered",
-    description: "Every edge case, type-level trick, and compiler quirk you never knew existed. Weekly episodes from the trenches of large-scale TypeScript codebases.",
-    coverImageUrl: "",
-    category: "Language",
-    authorName: "Priya Sharma",
-    authorUsername: "priya_sharma",
-    followersCount: 5120,
-    episodesCount: 61,
-    isFollowing: true,
-  },
-  {
-    id: "show-3",
-    slug: "ml-engineering-live",
-    title: "ML Engineering Live",
-    description: "Production ML: inference optimization, model serving, RAG architectures, and what no one tells you about running LLMs at scale.",
-    coverImageUrl: "",
-    category: "AI/ML",
-    authorName: "Elena Vasquez",
-    authorUsername: "elena_vasquez",
-    followersCount: 8930,
-    episodesCount: 22,
-    isFollowing: false,
-  },
-  {
-    id: "show-4",
-    slug: "edge-architecture",
-    title: "Edge Architecture",
-    description: "Cloudflare Workers, Durable Objects, edge databases, and building globally distributed systems that actually stay consistent.",
-    coverImageUrl: "",
-    category: "Infrastructure",
-    authorName: "Marcus Webb",
-    authorUsername: "marcus_webb",
-    followersCount: 1470,
-    episodesCount: 18,
-    isFollowing: false,
-  },
-];
-
-const mockTrendingEpisodes: PodcastEpisode[] = [
-  {
-    id: "ep-1",
-    slug: "kv-stores-cloudflare-durable-objects",
-    title: "Building High-Throughput KV Stores with Cloudflare Workers & Durable Objects",
-    description: "Elena Vasquez joins us to discuss multi-region key-value consistency, state replication, and avoiding deadlock pitfalls in serverless edge runtimes.",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-    durationSeconds: 2820,
-    publishedAt: "July 22, 2026",
-    showTitle: "Edge Architecture",
-    showId: "show-4",
-    authorName: "Marcus Webb",
-    authorUsername: "marcus_webb",
-    playsCount: 14200,
-    coverImageUrl: "",
-  },
-  {
-    id: "ep-2",
-    slug: "rust-memory-safety-concurrency",
-    title: "Rust Memory Safety & Concurrency without Arc<Mutex<T>> Deadlocks",
-    description: "Dae-Jung Kim breaks down channel-based message passing, lock-free lock ordering, and asynchronous execution patterns in high-concurrency Tokio systems.",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-    durationSeconds: 1980,
-    publishedAt: "July 18, 2026",
-    showTitle: "The Rust Runtime",
-    showId: "show-1",
-    authorName: "Dae-Jung Kim",
-    authorUsername: "daejung_kim",
-    playsCount: 9800,
-    coverImageUrl: "",
-  },
-  {
-    id: "ep-3",
-    slug: "context-window-wars-llm-attention",
-    title: "The Context Window Wars: Scaling LLM Attention Beyond 1M Tokens",
-    description: "DeepMind and Anthropic researchers talk memory-efficient attention mechanisms, RAG vs long-context tradeoffs, and future AI developer tools.",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-    durationSeconds: 3120,
-    publishedAt: "July 12, 2026",
-    showTitle: "ML Engineering Live",
-    showId: "show-3",
-    authorName: "Elena Vasquez",
-    authorUsername: "elena_vasquez",
-    playsCount: 21500,
-    coverImageUrl: "",
-  },
-];
-
-// Episodes from shows the user follows (mock — would be real DB query)
-const mockFollowingEpisodes: PodcastEpisode[] = [
-  {
-    id: "ep-4",
-    slug: "typescript-5-5-type-predicates",
-    title: "TypeScript 5.5 — Inferred Type Predicates & What They Actually Fix",
-    description: "We walk through every notable change in TS 5.5 focusing on inferred type predicates, isolated declarations, and the new performance improvements to the compiler pipeline.",
-    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-    durationSeconds: 2340,
-    publishedAt: "July 21, 2026",
-    showTitle: "TypeScript Uncovered",
-    showId: "show-2",
-    authorName: "Priya Sharma",
-    authorUsername: "priya_sharma",
-    playsCount: 4200,
-    coverImageUrl: "",
-  },
-];
+import { createClient } from "@/lib/supabase/server";
 
 // ── Helpers ────────────────────────────────────────────────────
 function fmt(seconds: number) {
+  if (!seconds) return "0m 0s";
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  if (m === 0) return `${s}s`;
+  if (s === 0) return `${m}m`;
+  return `${m}m ${s}s`;
 }
 
 function fmtPlays(n: number) {
+  if (!n) return "0";
   if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
   return String(n);
 }
 
 // ── Show Card ──────────────────────────────────────────────────
-function ShowCard({ show }: { show: PodcastShow }) {
-  const [isFollowing, setIsFollowing] = useState(show.isFollowing);
-  const initials = show.title.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+function ShowCard({ show }: { show: any }) {
+  const initials = show.title.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
   const bgColors = ["#2B3D3A", "#2B3038", "#1E2B3A", "#2B2B1E"];
-  const bg = bgColors[show.id.charCodeAt(5) % bgColors.length];
+  const bg = bgColors[show.id.charCodeAt(5) % bgColors.length] || bgColors[0];
 
   return (
     <div className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-colors flex flex-col gap-3 group">
@@ -191,15 +39,14 @@ function ShowCard({ show }: { show: PodcastShow }) {
         className="w-full aspect-square rounded-[var(--radius-sm)] flex items-center justify-center text-3xl font-bold text-[var(--ink-muted)] overflow-hidden"
         style={{ backgroundColor: bg }}
       >
-        {show.coverImageUrl ? (
-          <img src={show.coverImageUrl} alt={show.title} className="w-full h-full object-cover" />
+        {show.cover_image_url ? (
+          <img src={show.cover_image_url} alt={show.title} className="w-full h-full object-cover" />
         ) : (
           <span className="font-mono-numbers text-xl opacity-60">{initials}</span>
         )}
       </div>
 
       <div className="flex-1 min-w-0">
-        {/* Category */}
         <span className="text-[10px] font-semibold uppercase tracking-widest text-[#C9954C] mb-1 block">
           {show.category}
         </span>
@@ -212,18 +59,18 @@ function ShowCard({ show }: { show: PodcastShow }) {
           {show.description}
         </p>
         <div className="text-[10px] font-mono-numbers text-[var(--ink-muted)] flex items-center gap-2 mb-3">
-          <span>by @{show.authorUsername}</span>
+          <span>by @{show.author?.username}</span>
           <span>·</span>
-          <span>{fmtPlays(show.followersCount)} followers</span>
+          <span>{fmtPlays(show.followers_count)} followers</span>
           <span>·</span>
-          <span>{show.episodesCount} eps</span>
+          <span>{show.episodes_count || 0} eps</span>
         </div>
       </div>
 
       <FollowButton
         targetType="show"
         targetId={show.id}
-        initialFollowing={isFollowing}
+        initialFollowing={false}
         size="sm"
         className="w-full justify-center"
       />
@@ -232,87 +79,79 @@ function ShowCard({ show }: { show: PodcastShow }) {
 }
 
 // ── Episode Row ────────────────────────────────────────────────
-function EpisodeRow({ ep, featured = false }: { ep: PodcastEpisode; featured?: boolean }) {
-  const [expanded, setExpanded] = useState(false);
-
+function EpisodeRow({ ep }: { ep: any }) {
+  // Keeping this simple without inline state for expansion, or could use a client component wrapper.
+  // Actually, I can use a small Client Component for the play button expansion if needed, or just link to it.
+  // Let's use details/summary for CSS-only expansion to keep it a server component.
   return (
-    <div className={cn(
-      "rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-colors",
-      "hover:bg-[var(--surface-hover)]"
-    )}>
-      <div className="p-4 flex gap-3 items-start">
+    <details className="group/ep rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] overflow-hidden transition-colors hover:bg-[var(--surface-hover)]">
+      <summary className="p-4 flex gap-3 items-start list-none cursor-pointer marker:hidden">
         {/* Mini cover art */}
         <div
           className="w-10 h-10 rounded-[var(--radius-sm)] shrink-0 flex items-center justify-center text-xs font-bold text-[var(--ink-muted)] bg-[var(--surface-high)]"
           style={{ minWidth: 40 }}
         >
-          {ep.coverImageUrl ? (
-            <img src={ep.coverImageUrl} alt="" className="w-full h-full object-cover rounded-[var(--radius-sm)]" />
+          {ep.cover_image_url ? (
+            <img src={ep.cover_image_url} alt="" className="w-full h-full object-cover rounded-[var(--radius-sm)]" />
           ) : (
             <Mic className="w-4 h-4 opacity-40" />
           )}
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Show badge */}
           <Link
-            href={`/podcasts/show/${ep.showId}`}
+            href={`/podcasts/show/${ep.show?.slug}`}
             className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#C9954C] mb-1 hover:opacity-80 transition-opacity"
+            onClick={(e) => e.stopPropagation()}
           >
             <Radio className="w-2.5 h-2.5" />
-            <span>{ep.showTitle}</span>
+            <span>{ep.show?.title}</span>
           </Link>
 
-          {/* Title */}
-          <Link href={`/podcasts/${ep.slug}`}>
+          <Link href={`/podcasts/${ep.slug}`} onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xs font-semibold text-[var(--ink)] leading-snug mb-1 hover:text-[var(--accent)] transition-colors line-clamp-2">
               {ep.title}
             </h3>
           </Link>
 
-          {/* Meta */}
           <div className="text-[10px] font-mono-numbers text-[var(--ink-muted)] flex items-center gap-2 flex-wrap mb-2">
-            <span>@{ep.authorUsername}</span>
+            <span>@{ep.author?.username || "creator"}</span>
             <span>·</span>
-            <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{ep.publishedAt}</span>
+            <span className="flex items-center gap-0.5"><Calendar className="w-2.5 h-2.5" />{new Date(ep.published_at).toLocaleDateString()}</span>
             <span>·</span>
-            <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{fmt(ep.durationSeconds)}</span>
+            <span className="flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{fmt(ep.duration_seconds)}</span>
             <span>·</span>
-            <span className="flex items-center gap-0.5"><Play className="w-2.5 h-2.5 fill-current" />{fmtPlays(ep.playsCount)} plays</span>
+            <span className="flex items-center gap-0.5"><Play className="w-2.5 h-2.5 fill-current" />{fmtPlays(ep.plays_count)} plays</span>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setExpanded(!expanded)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity cursor-pointer"
-            >
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity cursor-pointer">
               <Play className="w-2.5 h-2.5 fill-current" />
-              {expanded ? "Close player" : "Play episode"}
-            </button>
-            <BookmarkButton targetType="podcast" targetId={ep.id} />
+              <span className="group-open/ep:hidden">Play episode</span>
+              <span className="hidden group-open/ep:inline">Close player</span>
+            </span>
+            <div onClick={(e) => e.stopPropagation()}>
+              <BookmarkButton targetType="podcast" targetId={ep.id} />
+            </div>
             <Link
               href={`/podcasts/${ep.slug}`}
               className="text-[10px] text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors"
+              onClick={(e) => e.stopPropagation()}
             >
               Show notes →
             </Link>
           </div>
         </div>
-      </div>
+      </summary>
 
-      {/* Inline Audio Player */}
-      {expanded && (
-        <div className="border-t border-[var(--border)] px-4 pb-4 pt-3">
-          <AudioPlayer
-            title={ep.title}
-            audioUrl={ep.audioUrl}
-            durationSeconds={ep.durationSeconds}
-          />
-        </div>
-      )}
-    </div>
+      <div className="border-t border-[var(--border)] px-4 pb-4 pt-3">
+        <AudioPlayer
+          title={ep.title}
+          audioUrl={""} 
+          durationSeconds={ep.duration_seconds}
+        />
+      </div>
+    </details>
   );
 }
 
@@ -343,16 +182,38 @@ function SectionHeader({
 }
 
 // ── Main Page ──────────────────────────────────────────────────
-type Tab = "discover" | "following" | "shows";
+export default async function PodcastsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab: paramTab } = await searchParams;
+  const activeTab = paramTab === "following" || paramTab === "shows" ? paramTab : "discover";
 
-export default function PodcastsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("discover");
-  const [shows, setShows] = useState(mockShows);
+  const supabase = await createClient();
 
-  const followingEpisodes = mockFollowingEpisodes;
+  const [showsRes, trendingRes, authRes] = await Promise.all([
+    (supabase.from("podcast_shows") as any)
+      .select("id, slug, title, description, cover_image_url, category, followers_count, episodes_count, author:profiles!author_id(display_name, username)")
+      .eq("is_published", true)
+      .order("followers_count", { ascending: false })
+      .limit(10),
+    (supabase.from("podcasts") as any)
+      .select("id, slug, title, description, duration_seconds, plays_count, published_at, cover_image_url, show:podcast_shows!show_id(id, title, slug)")
+      .order("plays_count", { ascending: false })
+      .limit(10),
+    supabase.auth.getUser()
+  ]);
+
+  const shows = showsRes.data || [];
+  const trendingEpisodes = trendingRes.data || [];
+  const user = authRes.data?.user;
+
+  // Real logic would join to get actual following episodes. For now we will check if any are present.
+  const followingEpisodes: any[] = []; // In a real app we'd fetch episodes from shows the user follows.
   const hasFollowing = followingEpisodes.length > 0;
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  const tabs = [
     { id: "discover", label: "Discover", icon: <Flame className="w-3 h-3" /> },
     { id: "following", label: "Following", icon: <Users className="w-3 h-3" /> },
     { id: "shows", label: "All Shows", icon: <Radio className="w-3 h-3" /> },
@@ -385,12 +246,11 @@ export default function PodcastsPage() {
       {/* Tab Navigation */}
       <div className="flex items-center gap-1">
         {tabs.map((t) => (
-          <button
+          <Link
             key={t.id}
-            type="button"
-            onClick={() => setActiveTab(t.id)}
+            href={`/podcasts?tab=${t.id}`}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-sm)] transition-colors cursor-pointer",
+              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-sm)] transition-colors",
               activeTab === t.id
                 ? "bg-[var(--surface-high)] text-[var(--ink)]"
                 : "text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--surface)]"
@@ -398,10 +258,7 @@ export default function PodcastsPage() {
           >
             {t.icon}
             {t.label}
-            {t.id === "following" && hasFollowing && (
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" />
-            )}
-          </button>
+          </Link>
         ))}
       </div>
 
@@ -409,52 +266,58 @@ export default function PodcastsPage() {
       {activeTab === "discover" && (
         <div className="space-y-8">
           {/* Featured Player */}
-          <div>
-            <SectionHeader
-              icon={<TrendingUp className="w-4 h-4" />}
-              title="Trending this week"
-              subtitle={`${fmtPlays(mockTrendingEpisodes[0].playsCount)} plays this week`}
-            />
-            <div className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-[var(--radius-sm)] bg-[var(--surface-high)] flex items-center justify-center shrink-0">
-                  <Mic className="w-5 h-5 text-[var(--ink-muted)] opacity-50" />
-                </div>
-                <div>
-                  <Link href={`/podcasts/show/${mockTrendingEpisodes[0].showId}`}>
-                    <span className="text-[10px] font-semibold text-[#C9954C] flex items-center gap-1 mb-1 hover:opacity-80 transition-opacity">
-                      <Radio className="w-2.5 h-2.5" />
-                      {mockTrendingEpisodes[0].showTitle}
-                    </span>
-                  </Link>
-                  <h3 className="text-sm font-bold text-[var(--ink)] leading-snug mb-1">
-                    {mockTrendingEpisodes[0].title}
-                  </h3>
-                  <p className="text-[11px] text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
-                    {mockTrendingEpisodes[0].description}
-                  </p>
-                </div>
-              </div>
-              <AudioPlayer
-                title={mockTrendingEpisodes[0].title}
-                audioUrl={mockTrendingEpisodes[0].audioUrl}
-                durationSeconds={mockTrendingEpisodes[0].durationSeconds}
+          {trendingEpisodes.length > 0 ? (
+            <div>
+              <SectionHeader
+                icon={<TrendingUp className="w-4 h-4" />}
+                title="Trending this week"
+                subtitle={`${fmtPlays(trendingEpisodes[0].plays_count)} plays this week`}
               />
+              <div className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-[var(--radius-sm)] bg-[var(--surface-high)] flex items-center justify-center shrink-0">
+                    <Mic className="w-5 h-5 text-[var(--ink-muted)] opacity-50" />
+                  </div>
+                  <div>
+                    <Link href={`/podcasts/show/${trendingEpisodes[0].show?.slug}`}>
+                      <span className="text-[10px] font-semibold text-[#C9954C] flex items-center gap-1 mb-1 hover:opacity-80 transition-opacity">
+                        <Radio className="w-2.5 h-2.5" />
+                        {trendingEpisodes[0].show?.title}
+                      </span>
+                    </Link>
+                    <h3 className="text-sm font-bold text-[var(--ink)] leading-snug mb-1">
+                      {trendingEpisodes[0].title}
+                    </h3>
+                    <p className="text-[11px] text-[var(--ink-muted)] line-clamp-2 leading-relaxed">
+                      {trendingEpisodes[0].description}
+                    </p>
+                  </div>
+                </div>
+                <AudioPlayer
+                  title={trendingEpisodes[0].title}
+                  audioUrl={""}
+                  durationSeconds={trendingEpisodes[0].duration_seconds}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="py-12 text-center text-[var(--ink-muted)] text-sm">No episodes yet.</div>
+          )}
 
           {/* More Trending */}
-          <div>
-            <SectionHeader
-              icon={<Flame className="w-4 h-4" />}
-              title="More trending episodes"
-            />
-            <div className="space-y-3">
-              {mockTrendingEpisodes.slice(1).map((ep) => (
-                <EpisodeRow key={ep.id} ep={ep} />
-              ))}
+          {trendingEpisodes.length > 1 && (
+            <div>
+              <SectionHeader
+                icon={<Flame className="w-4 h-4" />}
+                title="More trending episodes"
+              />
+              <div className="space-y-3">
+                {trendingEpisodes.slice(1).map((ep: any) => (
+                  <EpisodeRow key={ep.id} ep={ep} />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Featured Shows */}
           <div>
@@ -463,20 +326,26 @@ export default function PodcastsPage() {
               title="Popular shows"
               subtitle="Community-created developer podcasts"
               action={
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("shows")}
-                  className="text-[11px] text-[var(--accent)] hover:underline flex items-center gap-0.5 cursor-pointer"
+                <Link
+                  href="/podcasts?tab=shows"
+                  className="text-[11px] text-[var(--accent)] hover:underline flex items-center gap-0.5"
                 >
                   View all <ChevronRight className="w-3 h-3" />
-                </button>
+                </Link>
               }
             />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {shows.slice(0, 4).map((show) => (
-                <ShowCard key={show.id} show={show} />
-              ))}
-            </div>
+            {shows.length === 0 ? (
+              <div className="py-12 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)] space-y-2">
+                <p className="text-sm font-semibold text-[var(--ink)]">No podcast shows yet.</p>
+                <Link href="/new/podcast" className="text-xs text-[var(--accent)] hover:underline">Start your own show!</Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {shows.slice(0, 4).map((show: any) => (
+                  <ShowCard key={show.id} show={show} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -484,7 +353,21 @@ export default function PodcastsPage() {
       {/* ── TAB: FOLLOWING ── */}
       {activeTab === "following" && (
         <div className="space-y-4">
-          {hasFollowing ? (
+          {!user ? (
+            <div className="py-16 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)]">
+              <Users className="w-8 h-8 mx-auto mb-3 text-[var(--ink-muted)] opacity-50" />
+              <p className="text-sm font-semibold text-[var(--ink)] mb-1">Sign in to see new episodes</p>
+              <p className="text-xs text-[var(--ink-muted)] mb-4">
+                Sign in to see new episodes from creators you follow.
+              </p>
+              <Link
+                href="/login"
+                className="px-3 py-1.5 text-xs font-medium bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity"
+              >
+                Sign In
+              </Link>
+            </div>
+          ) : hasFollowing ? (
             <>
               <SectionHeader
                 icon={<Users className="w-4 h-4" />}
@@ -502,15 +385,14 @@ export default function PodcastsPage() {
               <Users className="w-8 h-8 mx-auto mb-3 text-[var(--ink-muted)] opacity-50" />
               <p className="text-sm font-semibold text-[var(--ink)] mb-1">No shows followed yet</p>
               <p className="text-xs text-[var(--ink-muted)] mb-4">
-                Follow shows to get their new episodes here as soon as they drop.
+                Follow some shows to see their episodes here.
               </p>
-              <button
-                type="button"
-                onClick={() => setActiveTab("shows")}
-                className="px-3 py-1.5 text-xs font-medium bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity cursor-pointer"
+              <Link
+                href="/podcasts?tab=shows"
+                className="px-3 py-1.5 text-xs font-medium bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity"
               >
                 Browse shows →
-              </button>
+              </Link>
             </div>
           )}
         </div>
@@ -524,11 +406,18 @@ export default function PodcastsPage() {
             title="All shows"
             subtitle={`${shows.length} shows from the community`}
           />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {shows.map((show) => (
-              <ShowCard key={show.id} show={show} />
-            ))}
-          </div>
+          {shows.length === 0 ? (
+            <div className="py-12 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)] space-y-2">
+              <p className="text-sm font-semibold text-[var(--ink)]">No podcast shows yet.</p>
+              <Link href="/new/podcast" className="text-xs text-[var(--accent)] hover:underline">Start your own show!</Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {shows.map((show: any) => (
+                <ShowCard key={show.id} show={show} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

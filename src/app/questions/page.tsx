@@ -1,75 +1,37 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { VoteControl } from "@/components/ui/vote-control";
 import { ContentTag } from "@/components/ui/content-tag";
 import { BookmarkButton } from "@/components/ui/bookmark-button";
 import { Plus, CheckCircle2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface QuestionItem {
-  id: string;
-  tagLabel: string;
-  title: string;
-  excerpt: string;
-  author: string;
-  timeAgo: string;
-  answersCount: number;
-  views: number;
-  upvotes: number;
-  downvotes: number;
-  isResolved: boolean;
-}
-
-const mockQuestions: QuestionItem[] = [
-  {
-    id: "1",
-    tagLabel: "RUST",
-    title: "How do I share state between async tasks without Arc<Mutex<T>> in every call site?",
-    excerpt: "I have a Tokio application where 12 tasks all need access to a connection pool. Wrapping in Arc<Mutex<...>> everywhere feels wrong.",
-    author: "Dae-Jung Kim",
-    timeAgo: "4h ago",
-    answersCount: 2,
-    views: 312,
-    upvotes: 87,
-    downvotes: 0,
-    isResolved: true,
-  },
-  {
-    id: "2",
-    tagLabel: "REACT",
-    title: "Why does useEffect run twice in development even with an empty dependency array?",
-    excerpt: "I'm running React 19 with StrictMode. My useEffect with [] fires on mount, cleans up, and fires again. What's the right pattern?",
-    author: "Marcus Webb",
-    timeAgo: "9h ago",
-    answersCount: 5,
-    views: 540,
-    upvotes: 155,
-    downvotes: 0,
-    isResolved: false,
-  },
-  {
-    id: "3",
-    tagLabel: "POSTGRESQL",
-    title: "How to index JSONB array elements for fast subset querying in Postgres 16?",
-    excerpt: "We store user permission tags inside a jsonb column `permissions: ['read', 'write']`. GIN indexing on the entire jsonb object is slow under high volume.",
-    author: "Sarah Jenkins",
-    timeAgo: "1d ago",
-    answersCount: 3,
-    views: 210,
-    upvotes: 42,
-    downvotes: 0,
-    isResolved: true,
-  },
-];
+import { createClient } from "@/lib/supabase/client";
 
 export default function QuestionsPage() {
   const [filter, setFilter] = useState<"all" | "unresolved" | "resolved">("all");
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredQuestions = mockQuestions.filter((q) => {
-    if (filter === "unresolved") return !q.isResolved;
-    if (filter === "resolved") return q.isResolved;
+  useEffect(() => {
+    async function fetchQuestions() {
+      setIsLoading(true);
+      const supabase = createClient();
+      const { data } = await (supabase.from("questions") as any)
+        .select("id, title, body_html, upvotes_count, answers_count, views, is_resolved, created_at, author:profiles!author_id(display_name, username, avatar_url)")
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      if (data) setQuestions(data);
+      setIsLoading(false);
+    }
+    fetchQuestions();
+  }, []);
+
+  const filteredQuestions = questions.filter((q) => {
+    if (filter === "unresolved") return !q.is_resolved;
+    if (filter === "resolved") return q.is_resolved;
     return true;
   });
 
@@ -125,55 +87,80 @@ export default function QuestionsPage() {
         </Link>
       </div>
 
-      {/* Questions List */}
-      <div className="divide-y divide-[var(--border)]">
-        {filteredQuestions.map((q) => (
-          <div key={q.id} className="py-4 flex gap-4 items-start group">
-            <VoteControl
-              initialUpvotes={q.upvotes}
-              initialDownvotes={q.downvotes}
-              orientation="vertical"
-              className="mt-0.5"
-            />
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <ContentTag type="question" label={q.tagLabel} />
-                {q.isResolved && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-mono-numbers text-[var(--accent)] uppercase font-semibold">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>RESOLVED</span>
-                  </span>
-                )}
-              </div>
-
-              <h2 className="text-sm font-medium text-[var(--ink)] group-hover:text-[var(--accent)] transition-colors leading-snug mb-1">
-                <Link href={`/questions/${q.id}`}>{q.title}</Link>
-              </h2>
-
-              <p className="text-xs text-[var(--ink-muted)] line-clamp-2 mb-2 leading-relaxed">
-                {q.excerpt}
-              </p>
-
-              <div className="text-[11px] text-[var(--ink-muted)] font-mono-numbers flex items-center gap-2 flex-wrap">
-                <span>{q.author}</span>
-                <span>·</span>
-                <span>{q.timeAgo}</span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <MessageSquare className="w-3 h-3 opacity-70" />
-                  {q.answersCount} answers
-                </span>
-                <span>·</span>
-                <span>{q.views} views</span>
-                <span className="ml-auto">
-                  <BookmarkButton targetType="question" targetId={q.id} />
-                </span>
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="divide-y divide-[var(--border)]">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="py-4 flex gap-4 items-start">
+              <div className="w-8 h-16 bg-[var(--surface-high)] rounded animate-pulse shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="w-16 h-4 bg-[var(--surface-high)] rounded animate-pulse" />
+                <div className="w-3/4 h-5 bg-[var(--surface-high)] rounded animate-pulse" />
+                <div className="w-full h-4 bg-[var(--surface-high)] rounded animate-pulse" />
+                <div className="w-2/3 h-4 bg-[var(--surface-high)] rounded animate-pulse" />
+                <div className="flex gap-2 pt-1">
+                  <div className="w-20 h-3 bg-[var(--surface-high)] rounded animate-pulse" />
+                  <div className="w-20 h-3 bg-[var(--surface-high)] rounded animate-pulse" />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : questions.length === 0 ? (
+        <div className="py-16 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)] space-y-2">
+          <p className="text-sm font-semibold text-[var(--ink)]">No questions yet. Ask the first one!</p>
+          <Link href="/new/question" className="text-xs text-[var(--accent)] hover:underline">Ask Question</Link>
+        </div>
+      ) : (
+        <div className="divide-y divide-[var(--border)]">
+          {filteredQuestions.length === 0 ? (
+            <div className="py-8 text-center text-xs text-[var(--ink-muted)]">No questions match this filter.</div>
+          ) : (
+            filteredQuestions.map((q) => (
+              <div key={q.id} className="py-4 flex gap-4 items-start group">
+                <VoteControl
+                  initialUpvotes={q.upvotes_count || 0}
+                  initialDownvotes={0}
+                  orientation="vertical"
+                  className="mt-0.5"
+                />
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <ContentTag type="question" label="QUESTION" />
+                    {q.is_resolved && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-mono-numbers text-[var(--accent)] uppercase font-semibold">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>RESOLVED</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <h2 className="text-sm font-medium text-[var(--ink)] group-hover:text-[var(--accent)] transition-colors leading-snug mb-1">
+                    <Link href={`/questions/${q.id}`}>{q.title}</Link>
+                  </h2>
+
+                  <div className="text-[11px] text-[var(--ink-muted)] font-mono-numbers flex items-center gap-2 flex-wrap mt-3">
+                    <span>{q.author?.display_name || q.author?.username || "Unknown user"}</span>
+                    <span>·</span>
+                    <span>{new Date(q.created_at).toLocaleDateString()}</span>
+                    <span>·</span>
+                    <span className="flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3 opacity-70" />
+                      {q.answers_count || 0} answers
+                    </span>
+                    <span>·</span>
+                    <span>{q.views || 0} views</span>
+                    <span className="ml-auto">
+                      <BookmarkButton targetType="question" targetId={q.id} />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

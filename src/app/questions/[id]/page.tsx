@@ -1,99 +1,41 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { VoteControl } from "@/components/ui/vote-control";
 import { ContentTag } from "@/components/ui/content-tag";
 import { BookmarkButton } from "@/components/ui/bookmark-button";
-import { createAnswer, acceptAnswer } from "@/lib/actions/answers";
-import { ArrowLeft, CheckCircle2, Share2 } from "lucide-react";
+import { ArrowLeft, Share2 } from "lucide-react";
+import { AnswerForm } from "./answer-form";
+import { AcceptButton } from "./accept-button";
 
-interface AnswerItem {
-  id: string;
-  author: string;
-  timeAgo: string;
-  upvotes: number;
-  isAccepted: boolean;
-  bodyHtml: string;
-}
+export default async function QuestionDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const supabase = await createClient();
 
-const mockAnswers: AnswerItem[] = [
-  {
-    id: "ans-1",
-    author: "Priya Sharma",
-    timeAgo: "5h ago",
-    upvotes: 64,
-    isAccepted: true,
-    bodyHtml: `
-      <p>The deadlock is because <code>std::sync::Mutex</code> is not safe to hold across <code>.await</code> points in Tokio task execution. Use <code>tokio::sync::Mutex</code> instead:</p>
-      <pre><code>use tokio::sync::Mutex;\n\nlet pool = Arc::new(Mutex::new(Pool::new(config)));\n\ntokio::spawn(async move {\n    let mut lock = pool.lock().await;\n    let conn = lock.acquire().await;\n});</code></pre>
-      <p>Alternatively, use a dedicated async connection pool like <code>bb8</code> or <code>deadpool-postgres</code>.</p>
-    `,
-  },
-  {
-    id: "ans-2",
-    author: "Alex Rivera",
-    timeAgo: "2h ago",
-    upvotes: 12,
-    isAccepted: false,
-    bodyHtml: `
-      <p>Another option is the actor pattern using <code>tokio::sync::mpsc</code> channels. Instead of sharing a Mutex, spawn a dedicated background task that owns the Pool exclusively and handles incoming message requests over a channel.</p>
-    `,
-  },
-];
+  const [questionRes, answersRes, authRes] = await Promise.all([
+    (supabase.from("questions") as any)
+      .select("id, title, body_html, upvotes_count, downvotes_count, answers_count, views, is_resolved, accepted_answer_id, created_at, author_id, author:profiles!author_id(display_name, username, avatar_url)")
+      .eq("id", id)
+      .maybeSingle(),
+    (supabase.from("answers") as any)
+      .select("id, body_html, upvotes_count, downvotes_count, is_accepted, created_at, author:profiles!author_id(display_name, username, avatar_url)")
+      .eq("question_id", id)
+      .order("is_accepted", { ascending: false })
+      .order("created_at", { ascending: true }),
+    supabase.auth.getUser(),
+  ]);
 
-export default function QuestionDetailPage() {
-  const [answers, setAnswers] = useState<AnswerItem[]>(mockAnswers);
-  const [newAnswerBody, setNewAnswerBody] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const question = questionRes.data;
+  if (!question) notFound();
 
-  const handlePostAnswer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAnswerBody.trim()) {
-      setError("Please write an answer before submitting.");
-      return;
-    }
-
-    setError(null);
-    setIsSubmitting(true);
-
-    const result = await createAnswer({
-      questionId: "1",
-      bodyHtml: `<p>${newAnswerBody}</p>`,
-    });
-
-    setIsSubmitting(false);
-
-    if (!result.success) {
-      setError(result.error);
-    } else {
-      setAnswers([
-        ...answers,
-        {
-          id: result.data.id,
-          author: "You",
-          timeAgo: "Just now",
-          upvotes: 0,
-          isAccepted: false,
-          bodyHtml: `<p>${newAnswerBody}</p>`,
-        },
-      ]);
-      setNewAnswerBody("");
-    }
-  };
-
-  const handleToggleAccept = async (answerId: string) => {
-    const result = await acceptAnswer("1", answerId);
-    if (result.success) {
-      setAnswers(
-        answers.map((ans) => ({
-          ...ans,
-          isAccepted: ans.id === answerId ? !ans.isAccepted : false,
-        }))
-      );
-    }
-  };
+  const answers = answersRes.data || [];
+  const user = authRes.data?.user;
+  const canAccept = user && user.id === question.author_id;
 
   return (
     <div className="w-full space-y-8">
@@ -110,46 +52,35 @@ export default function QuestionDetailPage() {
 
       {/* Question Header & Body */}
       <div className="flex gap-4 items-start">
-        <VoteControl initialUpvotes={87} initialDownvotes={0} orientation="vertical" />
+        <VoteControl initialUpvotes={question.upvotes_count || 0} initialDownvotes={question.downvotes_count || 0} orientation="vertical" />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <ContentTag type="question" label="RUST" />
+            <ContentTag type="question" label="DISCUSSION" />
           </div>
 
           <h1 className="text-xl font-medium text-[var(--ink)] leading-snug mb-3">
-            How do I share state between async tasks without Arc&lt;Mutex&lt;T&gt;&gt; in every call site?
+            {question.title}
           </h1>
 
-          <div className="text-xs text-[var(--ink-muted)] font-mono-numbers mb-4 flex items-center gap-2">
-            <span>Asked by Dae-Jung Kim</span>
+          <div className="text-xs text-[var(--ink-muted)] font-mono-numbers mb-4 flex items-center gap-2 flex-wrap">
+            <span>Asked by {question.author?.display_name || question.author?.username || "Unknown"}</span>
             <span>·</span>
-            <span>4h ago</span>
+            <span>{new Date(question.created_at).toLocaleDateString()}</span>
             <span>·</span>
-            <span>312 views</span>
+            <span>{question.views || 0} views</span>
             <span className="ml-auto flex items-center gap-1.5">
-              <BookmarkButton targetType="question" targetId="1" />
+              <BookmarkButton targetType="question" targetId={question.id} />
               <button type="button" aria-label="Share question" className="p-1 text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">
                 <Share2 className="w-3.5 h-3.5" />
               </button>
             </span>
           </div>
 
-          <div className="text-xs leading-relaxed text-[var(--ink)] space-y-4">
-            <p>
-              I have a Tokio application where 12 different async tasks all need access to a shared connection pool. Right now I am threading Arc&lt;Mutex&lt;Pool&gt;&gt; through every function signature and it feels deeply wrong.
-            </p>
-            <p>
-              The specific problem: I keep hitting deadlocks under load because one task holds the mutex while doing async I/O.
-            </p>
-            <pre className="p-3 rounded-[var(--radius-sm)] bg-[var(--surface)] text-[var(--ink)] overflow-x-auto text-xs font-mono">
-              <code>{`let pool = Arc::new(Mutex::new(Pool::new(config)));
-
-tokio::spawn(async move {
-    let conn = pool.lock().unwrap().acquire().await; // deadlock here
-});`}</code>
-            </pre>
-          </div>
+          <div
+            className="text-xs leading-relaxed text-[var(--ink)] space-y-4 prose max-w-none prose-pre:bg-[var(--surface)] prose-pre:text-[var(--ink)] prose-pre:border prose-pre:border-[var(--border)]"
+            dangerouslySetInnerHTML={{ __html: question.body_html || "" }}
+          />
         </div>
       </div>
 
@@ -157,74 +88,59 @@ tokio::spawn(async move {
       <div className="border-t border-[var(--border)] pt-6 space-y-6">
         <h2 className="text-sm font-medium text-[var(--ink)]">{answers.length} Answers</h2>
 
-        {answers.map((ans) => (
-          <div
-            key={ans.id}
-            className={`flex gap-4 items-start p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border transition-colors ${
-              ans.isAccepted
-                ? "border-l-2 border-l-[var(--accent)] border-[var(--border)]"
-                : "border-[var(--border)]"
-            }`}
-          >
-            <VoteControl initialUpvotes={ans.upvotes} orientation="vertical" />
+        {answers.length === 0 ? (
+          <div className="py-8 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)]">
+            <p className="text-sm font-semibold text-[var(--ink)]">No answers yet</p>
+            <p className="text-xs text-[var(--ink-muted)] mt-1">Be the first to share your knowledge!</p>
+          </div>
+        ) : (
+          answers.map((ans: any) => (
+            <div
+              key={ans.id}
+              className={`flex gap-4 items-start p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border transition-colors ${
+                ans.is_accepted
+                  ? "border-l-2 border-l-[var(--accent)] border-[var(--border)]"
+                  : "border-[var(--border)]"
+              }`}
+            >
+              <VoteControl initialUpvotes={ans.upvotes_count || 0} initialDownvotes={ans.downvotes_count || 0} orientation="vertical" />
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2 text-xs font-mono-numbers text-[var(--ink-muted)]">
-                  <span className="font-semibold text-[var(--ink)]">{ans.author}</span>
-                  <span>{ans.timeAgo}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-xs font-mono-numbers text-[var(--ink-muted)]">
+                    <span className="font-semibold text-[var(--ink)]">{ans.author?.display_name || ans.author?.username || "Unknown"}</span>
+                    <span>{new Date(ans.created_at).toLocaleDateString()}</span>
+                  </div>
+
+                  <AcceptButton
+                    questionId={question.id}
+                    answerId={ans.id}
+                    isAccepted={ans.is_accepted}
+                    canAccept={canAccept || false}
+                  />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleToggleAccept(ans.id)}
-                  className={`inline-flex items-center gap-1 text-[11px] font-mono-numbers cursor-pointer transition-colors ${
-                    ans.isAccepted
-                      ? "text-[var(--accent)] font-semibold"
-                      : "text-[var(--ink-muted)] hover:text-[var(--accent)]"
-                  }`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>{ans.isAccepted ? "ACCEPTED ANSWER" : "Mark as accepted"}</span>
-                </button>
+                <div
+                  className="text-xs leading-relaxed text-[var(--ink)] space-y-3 prose max-w-none prose-pre:bg-[var(--surface-high)] prose-pre:text-[var(--ink)] prose-pre:border prose-pre:border-[var(--border)]"
+                  dangerouslySetInnerHTML={{ __html: ans.body_html || "" }}
+                />
               </div>
-
-              <div
-                className="text-xs leading-relaxed text-[var(--ink)] space-y-3 prose max-w-none"
-                dangerouslySetInnerHTML={{ __html: ans.bodyHtml }}
-              />
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Answer Submission Composer */}
-      <div className="border-t border-[var(--border)] pt-6">
-        <h3 className="text-xs font-medium text-[var(--ink)] mb-2">Your Answer</h3>
-
-        {error && (
-          <div className="mb-3 p-2.5 rounded-[var(--radius-sm)] bg-[var(--downvote-soft)] border border-[var(--downvote)] text-[var(--downvote)] text-xs">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handlePostAnswer}>
-          <textarea
-            rows={5}
-            value={newAnswerBody}
-            onChange={(e) => setNewAnswerBody(e.target.value)}
-            placeholder="Write your answer with code examples and clear reasoning..."
-            className="w-full p-3 text-xs bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--ink)] placeholder-[var(--ink-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors mb-3"
-          />
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-4 py-2 bg-[var(--accent)] text-[var(--bg)] font-medium text-xs rounded-[var(--radius-md)] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
-          >
-            {isSubmitting ? "Posting answer..." : "Post Answer"}
-          </button>
-        </form>
-      </div>
+      {user ? (
+        <AnswerForm questionId={question.id} />
+      ) : (
+        <div className="border-t border-[var(--border)] pt-6 text-center">
+          <p className="text-xs text-[var(--ink-muted)] mb-3">Please sign in to answer this question.</p>
+          <Link href={`/login?redirect=/questions/${question.id}`} className="px-4 py-2 bg-[var(--accent)] text-[var(--bg)] font-medium text-xs rounded-[var(--radius-md)] hover:opacity-90 transition-opacity">
+            Sign In
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,86 +1,104 @@
 "use client";
 
-import React, { useState } from "react";
-import { resolveReport, dismissReport, toggleUserBan } from "@/lib/actions/moderation";
-import { Shield, AlertTriangle, Users, BarChart3, CheckCircle2, XCircle, Search, Lock, Unlock } from "lucide-react";
-
-interface ReportItem {
-  id: string;
-  targetType: "Article" | "Question" | "Comment" | "User";
-  targetTitle: string;
-  reporterUsername: string;
-  reason: string;
-  status: "pending" | "resolved" | "dismissed";
-  createdAt: string;
-}
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toggleUserBan } from "@/lib/actions/moderation";
+import { Shield, AlertTriangle, Users, BarChart3, Search, Lock, Unlock } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface UserItem {
   id: string;
   username: string;
-  displayName: string;
+  display_name: string;
   role: "user" | "author" | "moderator" | "admin";
-  isBanned: boolean;
+  is_banned: boolean;
   reputation: number;
+  created_at: string;
 }
 
-const mockReports: ReportItem[] = [
-  {
-    id: "rep_1",
-    targetType: "Comment",
-    targetTitle: "Spam link in answer comments",
-    reporterUsername: "priya_sharma",
-    reason: "Promotional spam link targeting crypto scam",
-    status: "pending",
-    createdAt: "2 hours ago",
-  },
-  {
-    id: "rep_2",
-    targetType: "Question",
-    targetTitle: "How to bypass Auth RLS policies?",
-    reporterUsername: "daejung",
-    reason: "Off-topic harassment / duplicate post",
-    status: "pending",
-    createdAt: "5 hours ago",
-  },
-];
-
-const mockUsers: UserItem[] = [
-  { id: "usr_1", username: "alex_rivera", displayName: "Alex Rivera", role: "user", isBanned: false, reputation: 140 },
-  { id: "usr_2", username: "spam_bot_99", displayName: "Fast Crypto", role: "user", isBanned: true, reputation: -20 },
-  { id: "usr_3", username: "priya_sharma", displayName: "Priya Sharma", role: "author", isBanned: false, reputation: 1250 },
-];
-
 export default function AdminPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"reports" | "users" | "analytics">("reports");
-  const [reports, setReports] = useState<ReportItem[]>(mockReports);
-  const [users, setUsers] = useState<UserItem[]>(mockUsers);
+  
+  const [users, setUsers] = useState<UserItem[]>([]);
+  const [stats, setStats] = useState({ members: 0, articles: 0, questions: 0, jobs: 0 });
+  const [loading, setLoading] = useState(true);
+
   const [userQuery, setUserQuery] = useState("");
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const handleResolve = async (id: string) => {
-    setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status: "resolved" } : r)));
-    setActionMessage("Report marked as resolved.");
-    await resolveReport(id);
-  };
+  useEffect(() => {
+    const initAdmin = async () => {
+      const supabase = createClient();
+      
+      // Auth Check
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/feed?authRequired=1');
+        return;
+      }
+      
+      const { data: profile } = await (supabase.from('profiles') as any)
+        .select('role')
+        .eq('id', user.id)
+        .single();
+        
+      if (!profile || !['admin', 'moderator'].includes(profile.role)) {
+        router.push('/feed');
+        return;
+      }
 
-  const handleDismiss = async (id: string) => {
-    setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status: "dismissed" } : r)));
-    setActionMessage("Report dismissed.");
-    await dismissReport(id);
-  };
+      // Fetch Stats
+      const [membersRes, articlesRes, questionsRes, jobsRes] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('articles').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+        supabase.from('questions').select('*', { count: 'exact', head: true }),
+        (supabase.from('jobs') as any).select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      ]);
+
+      setStats({
+        members: membersRes.count || 0,
+        articles: articlesRes.count || 0,
+        questions: questionsRes.count || 0,
+        jobs: jobsRes.count || 0,
+      });
+
+      // Fetch Users
+      const { data: usersData } = await (supabase.from('profiles') as any)
+        .select('id, username, display_name, role, is_banned, reputation, created_at')
+        .order('created_at', { ascending: false })
+        .limit(50);
+        
+      if (usersData) {
+        setUsers(usersData);
+      }
+      
+      setLoading(false);
+    };
+
+    initAdmin();
+  }, [router]);
 
   const handleBanToggle = async (userId: string, currentBanState: boolean) => {
     const newStatus = !currentBanState;
-    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, isBanned: newStatus } : u)));
+    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, is_banned: newStatus } : u)));
     setActionMessage(newStatus ? "User banned successfully." : "User unbanned.");
     await toggleUserBan(userId, newStatus);
   };
 
   const filteredUsers = users.filter(
     (u) =>
-      u.username.toLowerCase().includes(userQuery.toLowerCase()) ||
-      u.displayName.toLowerCase().includes(userQuery.toLowerCase())
+      u.username?.toLowerCase().includes(userQuery.toLowerCase()) ||
+      u.display_name?.toLowerCase().includes(userQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12 text-[var(--ink-muted)] text-sm">
+        Loading Admin Dashboard...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -125,7 +143,7 @@ export default function AdminPage() {
           }`}
         >
           <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-          <span>Reports Queue ({reports.filter((r) => r.status === "pending").length})</span>
+          <span>Reports Queue</span>
         </button>
 
         <button
@@ -158,62 +176,15 @@ export default function AdminPage() {
       {/* TAB 1: REPORTS QUEUE */}
       {activeTab === "reports" && (
         <div className="space-y-3">
-          {reports.length === 0 ? (
-            <div className="p-8 text-center text-xs text-[var(--ink-muted)] border border-[var(--border)] rounded-[var(--radius-md)]">
-              No reports in queue. Content clean!
-            </div>
-          ) : (
-            reports.map((rep) => (
-              <div
-                key={rep.id}
-                className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] space-y-3"
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 font-semibold">
-                    <span className="px-2 py-0.5 rounded bg-[var(--surface-high)] text-[var(--ink-muted)] text-[10px] font-mono-numbers">
-                      {rep.targetType}
-                    </span>
-                    <span className="text-[var(--ink)]">{rep.targetTitle}</span>
-                  </div>
-                  <span className="text-[10px] font-mono-numbers text-[var(--ink-muted)]">
-                    {rep.createdAt}
-                  </span>
-                </div>
-
-                <p className="text-xs text-[var(--ink-muted)] leading-relaxed bg-[var(--bg)] p-2.5 rounded border border-[var(--border)]">
-                  <strong className="text-[var(--ink)]">Reason:</strong> {rep.reason}{" "}
-                  <span className="text-[10px] opacity-75">(reported by @{rep.reporterUsername})</span>
-                </p>
-
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-[11px] font-mono-numbers text-[var(--ink-muted)] uppercase">
-                    Status: <strong className="text-[var(--ink)]">{rep.status}</strong>
-                  </span>
-
-                  {rep.status === "pending" && (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleDismiss(rep.id)}
-                        className="px-2.5 py-1 bg-[var(--bg)] border border-[var(--border)] hover:bg-[var(--surface-hover)] text-[var(--ink-muted)] text-xs rounded transition-colors flex items-center gap-1 cursor-pointer"
-                      >
-                        <XCircle className="w-3.5 h-3.5" />
-                        <span>Dismiss</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleResolve(rep.id)}
-                        className="px-2.5 py-1 bg-[var(--accent)] text-[var(--bg)] font-medium text-xs rounded transition-opacity hover:opacity-90 flex items-center gap-1 cursor-pointer"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Resolve</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+          <div className="p-12 text-center border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)]">
+            <AlertTriangle className="w-8 h-8 text-[var(--ink-muted)] mx-auto mb-3 opacity-50" />
+            <h3 className="text-sm font-bold text-[var(--ink)] mb-1">
+              Reports Feature Coming Soon
+            </h3>
+            <p className="text-xs text-[var(--ink-muted)]">
+              The content reporting system is currently being upgraded.
+            </p>
+          </div>
         </div>
       )}
 
@@ -239,11 +210,11 @@ export default function AdminPage() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-[var(--surface-high)] font-bold text-xs flex items-center justify-center font-mono-numbers">
-                    {u.displayName.slice(0, 2).toUpperCase()}
+                    {u.display_name ? u.display_name.slice(0, 2).toUpperCase() : "?"}
                   </div>
                   <div>
                     <div className="font-semibold text-[var(--ink)] flex items-center gap-2">
-                      <span>{u.displayName}</span>
+                      <span>{u.display_name}</span>
                       <span className="text-[10px] text-[var(--ink-muted)] font-mono-numbers">@{u.username}</span>
                       <span className="px-1.5 py-0.5 rounded text-[9px] font-mono-numbers bg-[var(--surface-high)] text-[var(--accent)] uppercase font-bold">
                         {u.role}
@@ -257,14 +228,14 @@ export default function AdminPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleBanToggle(u.id, u.isBanned)}
+                  onClick={() => handleBanToggle(u.id, u.is_banned)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-[var(--radius-sm)] border transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    u.isBanned
+                    u.is_banned
                       ? "bg-[var(--success)]/10 border-[var(--success)]/30 text-[var(--success)] hover:bg-[var(--success)]/20"
                       : "bg-[var(--danger)]/10 border-[var(--danger)]/30 text-[var(--danger)] hover:bg-[var(--danger)]/20"
                   }`}
                 >
-                  {u.isBanned ? (
+                  {u.is_banned ? (
                     <>
                       <Unlock className="w-3.5 h-3.5" />
                       <span>Unban User</span>
@@ -278,6 +249,12 @@ export default function AdminPage() {
                 </button>
               </div>
             ))}
+            
+            {filteredUsers.length === 0 && (
+              <div className="p-8 text-center text-xs text-[var(--ink-muted)] border border-[var(--border)] rounded-[var(--radius-md)] bg-[var(--surface)]">
+                No users found matching "{userQuery}".
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -287,19 +264,19 @@ export default function AdminPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)]">
             <div className="text-[10px] font-semibold text-[var(--ink-muted)] uppercase tracking-wider">Total Members</div>
-            <div className="text-xl font-bold font-mono-numbers text-[var(--ink)] mt-1">1,482</div>
+            <div className="text-xl font-bold font-mono-numbers text-[var(--ink)] mt-1">{stats.members.toLocaleString()}</div>
           </div>
           <div className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)]">
             <div className="text-[10px] font-semibold text-[var(--ink-muted)] uppercase tracking-wider">Published Articles</div>
-            <div className="text-xl font-bold font-mono-numbers text-[var(--accent)] mt-1">324</div>
+            <div className="text-xl font-bold font-mono-numbers text-[var(--accent)] mt-1">{stats.articles.toLocaleString()}</div>
           </div>
           <div className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)]">
-            <div className="text-[10px] font-semibold text-[var(--ink-muted)] uppercase tracking-wider">Answered Questions</div>
-            <div className="text-xl font-bold font-mono-numbers text-[var(--ink)] mt-1">891</div>
+            <div className="text-[10px] font-semibold text-[var(--ink-muted)] uppercase tracking-wider">Questions</div>
+            <div className="text-xl font-bold font-mono-numbers text-[var(--ink)] mt-1">{stats.questions.toLocaleString()}</div>
           </div>
           <div className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)]">
             <div className="text-[10px] font-semibold text-[var(--ink-muted)] uppercase tracking-wider">Active Jobs</div>
-            <div className="text-xl font-bold font-mono-numbers text-[var(--accent)] mt-1">42</div>
+            <div className="text-xl font-bold font-mono-numbers text-[var(--accent)] mt-1">{stats.jobs.toLocaleString()}</div>
           </div>
         </div>
       )}

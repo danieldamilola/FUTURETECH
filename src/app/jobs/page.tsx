@@ -1,74 +1,31 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { Briefcase, MapPin, DollarSign, Building2, Plus, ExternalLink } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 
-interface JobListing {
-  id: string;
-  companyName: string;
-  companyLogo: string;
-  title: string;
-  location: string;
-  employmentType: "Full-Time" | "Part-Time" | "Contract" | "Remote";
-  salaryRange: string;
-  postedAt: string;
-  tags: string[];
-}
+export default async function JobsPage() {
+  const supabase = await createClient();
 
-const mockJobs: JobListing[] = [
-  {
-    id: "1",
-    companyName: "Vercel",
-    companyLogo: "V",
-    title: "Staff Platform Engineer — Edge Infrastructure",
-    location: "San Francisco, CA / Remote",
-    employmentType: "Remote",
-    salaryRange: "$200,000 – $260,000",
-    postedAt: "2 days ago",
-    tags: ["TypeScript", "Next.js", "Rust", "Edge"],
-  },
-  {
-    id: "2",
-    companyName: "Linear",
-    companyLogo: "L",
-    title: "Fullstack Systems Engineer",
-    location: "San Francisco, CA / Remote",
-    employmentType: "Full-Time",
-    salaryRange: "$160,000 – $204,000",
-    postedAt: "3 days ago",
-    tags: ["React", "TypeScript", "GraphQL", "Sync Engine"],
-  },
-  {
-    id: "3",
-    companyName: "Supabase",
-    companyLogo: "S",
-    title: "DevOps & PostgreSQL Storage Engineer",
-    location: "Singapore / Remote",
-    employmentType: "Remote",
-    salaryRange: "$140,000 – $180,000",
-    postedAt: "5 days ago",
-    tags: ["PostgreSQL", "Go", "Docker", "Kubernetes"],
-  },
-  {
-    id: "4",
-    companyName: "Anthropic",
-    companyLogo: "A",
-    title: "Senior AI Infrastructure Engineer",
-    location: "San Francisco, CA",
-    employmentType: "Full-Time",
-    salaryRange: "$220,000 – $310,000",
-    postedAt: "1 week ago",
-    tags: ["Python", "PyTorch", "CUDA", "LLM"],
-  },
-];
+  const { data: jobs, error } = await (supabase.from("jobs") as any)
+    .select("id, company_name, company_logo_url, title, location, employment_type, salary_range, apply_url, created_at")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
 
-export default function JobsPage() {
-  const [selectedFilter, setSelectedFilter] = useState<string>("All");
+  // Format date helper
+  const formatTimeAgo = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return "Today";
+    if (diffInDays === 1) return "1 day ago";
+    return `${diffInDays} days ago`;
+  };
 
-  const filteredJobs = selectedFilter === "All"
-    ? mockJobs
-    : mockJobs.filter((job) => job.employmentType === selectedFilter || job.tags.includes(selectedFilter));
+  const formatEmploymentType = (type: string) => {
+    if (!type) return "";
+    return type.split("_").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+  };
 
   return (
     <div className="space-y-6">
@@ -96,88 +53,92 @@ export default function JobsPage() {
         </Link>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        {["All", "Remote", "Full-Time", "TypeScript", "PostgreSQL", "Python"].map((filter) => (
-          <button
-            key={filter}
-            type="button"
-            onClick={() => setSelectedFilter(filter)}
-            className={`px-3 py-1.5 rounded-[var(--radius-sm)] border font-medium transition-colors whitespace-nowrap cursor-pointer ${
-              selectedFilter === filter
-                ? "bg-[var(--surface-high)] border-[var(--border-strong)] text-[var(--ink)]"
-                : "bg-[var(--surface)] border-[var(--border)] text-[var(--ink-muted)] hover:text-[var(--ink)]"
-            }`}
-          >
-            {filter}
-          </button>
-        ))}
-      </div>
-
       {/* Jobs List */}
       <div className="space-y-3">
-        {filteredJobs.map((job) => (
-          <article
-            key={job.id}
-            className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-colors space-y-3"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--surface-high)] text-[var(--ink)] font-bold text-sm flex items-center justify-center font-mono-numbers shrink-0">
-                  {job.companyLogo}
+        {!jobs || jobs.length === 0 ? (
+          <div className="p-10 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] text-center">
+            <Briefcase className="w-8 h-8 text-[var(--ink-muted)] mx-auto mb-3 opacity-50" />
+            <h3 className="text-sm font-bold text-[var(--ink)] mb-1">
+              No Job Listings Yet
+            </h3>
+            <p className="text-xs text-[var(--ink-muted)]">
+              Check back soon for new opportunities, or post a job yourself.
+            </p>
+          </div>
+        ) : (
+          jobs.map((job: any) => (
+            <article
+              key={job.id}
+              className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-colors space-y-3"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  {job.company_logo_url ? (
+                    <img 
+                      src={job.company_logo_url} 
+                      alt={job.company_name}
+                      className="w-9 h-9 rounded-[var(--radius-sm)] object-cover shrink-0 bg-[var(--surface-high)]"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--surface-high)] text-[var(--ink)] font-bold text-sm flex items-center justify-center font-mono-numbers shrink-0">
+                      {job.company_name ? job.company_name.slice(0, 1).toUpperCase() : "B"}
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h2 className="text-sm font-bold text-[var(--ink)] hover:text-[var(--accent)] transition-colors">
+                      {job.title}
+                    </h2>
+                    <div className="flex items-center gap-2 text-xs text-[var(--ink-muted)] mt-0.5">
+                      <span className="font-semibold text-[var(--ink)] flex items-center gap-1">
+                        <Building2 className="w-3 h-3 text-[var(--ink-muted)]" />
+                        {job.company_name}
+                      </span>
+                      <span>·</span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-[var(--ink-muted)]" />
+                        {job.location}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-sm font-bold text-[var(--ink)] hover:text-[var(--accent)] transition-colors">
-                    {job.title}
-                  </h2>
-                  <div className="flex items-center gap-2 text-xs text-[var(--ink-muted)] mt-0.5">
-                    <span className="font-semibold text-[var(--ink)] flex items-center gap-1">
-                      <Building2 className="w-3 h-3 text-[var(--ink-muted)]" />
-                      {job.companyName}
-                    </span>
-                    <span>·</span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-[var(--ink-muted)]" />
-                      {job.location}
-                    </span>
+
+                <div className="text-right shrink-0">
+                  <div className="text-xs font-mono-numbers font-bold text-[var(--accent)] flex items-center gap-1 justify-end">
+                    <DollarSign className="w-3.5 h-3.5" />
+                    {job.salary_range || "Competitive"}
+                  </div>
+                  <div className="text-[10px] text-[var(--ink-muted)] font-mono-numbers mt-0.5">
+                    {formatTimeAgo(job.created_at)}
                   </div>
                 </div>
               </div>
 
-              <div className="text-right shrink-0">
-                <div className="text-xs font-mono-numbers font-bold text-[var(--accent)] flex items-center gap-1 justify-end">
-                  <DollarSign className="w-3.5 h-3.5" />
-                  {job.salaryRange}
+              {/* Tags & Action */}
+              <div className="pt-2 flex items-center justify-between border-t border-[var(--border)]">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {job.employment_type && (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono-numbers bg-[var(--surface-high)] text-[var(--ink-muted)] border border-[var(--border)]">
+                      {formatEmploymentType(job.employment_type)}
+                    </span>
+                  )}
                 </div>
-                <div className="text-[10px] text-[var(--ink-muted)] font-mono-numbers mt-0.5">
-                  {job.postedAt}
-                </div>
-              </div>
-            </div>
 
-            {/* Tags & Action */}
-            <div className="pt-2 flex items-center justify-between border-t border-[var(--border)]">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {job.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-0.5 rounded text-[10px] font-mono-numbers bg-[var(--surface-high)] text-[var(--ink-muted)] border border-[var(--border)]"
+                {job.apply_url && (
+                  <a
+                    href={job.apply_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-medium text-[var(--accent)] hover:underline flex items-center gap-1"
                   >
-                    #{tag}
-                  </span>
-                ))}
+                    <span>Apply Now</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </div>
-
-              <a
-                href="#"
-                className="text-xs font-medium text-[var(--accent)] hover:underline flex items-center gap-1"
-              >
-                <span>Apply Now</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))
+        )}
       </div>
     </div>
   );
