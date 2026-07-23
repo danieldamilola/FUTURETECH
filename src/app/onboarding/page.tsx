@@ -18,7 +18,8 @@ const TECH_SUGGESTIONS = [
   "PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite",
   "Docker", "Kubernetes", "Terraform", "AWS", "GCP", "Cloudflare",
   "GraphQL", "REST", "gRPC", "WebSockets",
-  "WebAssembly", "Linux", "Git", "GitHub", "Nix",
+  "WebAssembly", "Linux", "Windows", "macOS", "Android", "iOS",
+  "Git", "GitHub", "Nix", "iPhone", "Samsung", "Huawei", "Hardware",
 ];
 
 const INTEREST_OPTIONS = [

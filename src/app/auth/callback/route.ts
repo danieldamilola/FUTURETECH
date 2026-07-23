@@ -40,8 +40,27 @@ export async function GET(request: Request) {
         .eq("id", data.user.id)
         .single();
 
-      // New users (onboarded = false) → onboarding. Existing → feed.
-      const destination = profile?.onboarded === false ? "/onboarding" : "/feed";
+      let destination = profile?.onboarded === false ? "/onboarding" : "/feed";
+
+      // If user signed up via GitHub, auto-onboard them
+      if (
+        data.user.app_metadata.provider === "github" &&
+        profile?.onboarded === false
+      ) {
+        const meta = data.user.user_metadata;
+        const updates: any = { onboarded: true, updated_at: new Date().toISOString() };
+        
+        if (meta?.full_name) updates.display_name = meta.full_name;
+        if (meta?.user_name) {
+          updates.username = meta.user_name;
+          updates.github_url = `https://github.com/${meta.user_name}`;
+        }
+        if (meta?.avatar_url) updates.avatar_url = meta.avatar_url;
+
+        await supabase.from("profiles").update(updates).eq("id", data.user.id);
+        destination = "/feed"; // Skip onboarding page
+      }
+
       return NextResponse.redirect(`${origin}${destination}`);
     }
 
