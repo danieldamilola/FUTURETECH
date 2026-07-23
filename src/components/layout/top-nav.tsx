@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { createClient } from "@/lib/supabase/client";
 import { AuthModal } from "@/components/auth/auth-modal";
-import { Search, Bell, User, Plus } from "lucide-react";
+import { Search, Bell, User, Plus, MoreHorizontal, LogIn, Megaphone, Sparkles, SunMoon } from "lucide-react";
 
 export function TopNav() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalDefaultMode, setAuthModalDefaultMode] = useState<"signin" | "signup">("signin");
 
   useEffect(() => {
     const supabase = createClient();
@@ -25,6 +27,11 @@ export function TopNav() {
       subscription.unsubscribe();
     };
   }, []);
+
+  const openAuthModal = (mode: "signin" | "signup") => {
+    setAuthModalDefaultMode(mode);
+    setIsAuthModalOpen(true);
+  };
 
   return (
     <>
@@ -80,14 +87,76 @@ export function TopNav() {
               </Link>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={() => setIsAuthModalOpen(true)}
-              className="px-3 py-1.5 text-xs text-[var(--ink)] hover:bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-sm)] transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <User className="w-3.5 h-3.5 opacity-70" />
-              <span>Sign in</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Sign Up Button (Pill style matching user reference image) */}
+              <button
+                type="button"
+                onClick={() => openAuthModal("signup")}
+                className="bg-[#2B333D] hover:bg-[#38424F] text-[var(--ink)] font-semibold rounded-full px-4 py-1.5 text-xs transition-colors cursor-pointer"
+              >
+                Sign Up
+              </button>
+
+              {/* Log In Button (Pill style matching user reference image) */}
+              <button
+                type="button"
+                onClick={() => openAuthModal("signin")}
+                className="bg-[#D94F2B] hover:bg-[#E85B35] text-white font-semibold rounded-full px-4 py-1.5 text-xs transition-colors cursor-pointer"
+              >
+                Log In
+              </button>
+
+              {/* 3 Dots Dropdown Menu */}
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <button
+                    type="button"
+                    aria-label="More options"
+                    className="p-1.5 text-[var(--ink-muted)] hover:text-[var(--ink)] hover:bg-[var(--surface)] rounded-full transition-colors cursor-pointer ml-0.5"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </DropdownMenu.Trigger>
+
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content
+                    className="min-w-[200px] bg-[#1A1F25] border border-[var(--border-strong)] rounded-[var(--radius-md)] p-1.5 shadow-xl text-xs z-50 text-[var(--ink)] animate-in fade-in-50 zoom-in-95"
+                    sideOffset={5}
+                    align="end"
+                  >
+                    <DropdownMenu.Item
+                      onClick={() => openAuthModal("signin")}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-high)] cursor-pointer outline-none transition-colors"
+                    >
+                      <LogIn className="w-3.5 h-3.5 text-[var(--ink-muted)]" />
+                      <span>Log In / Sign Up</span>
+                    </DropdownMenu.Item>
+
+                    <DropdownMenu.Separator className="h-px bg-[var(--border)] my-1" />
+
+                    <DropdownMenu.Item className="flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-high)] cursor-pointer outline-none transition-colors">
+                      <Megaphone className="w-3.5 h-3.5 text-[var(--ink-muted)]" />
+                      <span>Advertise on FutureTech</span>
+                    </DropdownMenu.Item>
+
+                    <DropdownMenu.Item className="flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-high)] cursor-pointer outline-none transition-colors">
+                      <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
+                      <span className="flex-1">Try FutureTech Pro</span>
+                      <span className="text-[9px] font-mono-numbers px-1.5 py-0.5 rounded bg-[var(--downvote-soft)] text-[var(--downvote)] font-bold">
+                        BETA
+                      </span>
+                    </DropdownMenu.Item>
+
+                    <DropdownMenu.Separator className="h-px bg-[var(--border)] my-1" />
+
+                    <DropdownMenu.Item className="flex items-center gap-2.5 px-3 py-2 rounded-[var(--radius-sm)] hover:bg-[var(--surface-high)] cursor-pointer outline-none transition-colors">
+                      <SunMoon className="w-3.5 h-3.5 text-[var(--ink-muted)]" />
+                      <span>Display Mode</span>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+            </div>
           )}
         </div>
       </header>
@@ -96,6 +165,7 @@ export function TopNav() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onOpenChange={setIsAuthModalOpen}
+        defaultMode={authModalDefaultMode}
       />
     </>
   );

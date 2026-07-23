@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 interface TrendingTag {
   name: string;
@@ -54,6 +55,28 @@ export function RightSidebar({
   mentors = defaultMentors,
   jobs = defaultJobs,
 }: RightSidebarProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session?.user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Hide right side panel when logged out per user directive
+  if (!isLoggedIn) {
+    return null;
+  }
+
   return (
     <aside className="w-[320px] shrink-0 border-l border-[var(--border)] bg-[var(--bg)] sticky top-[56px] h-[calc(100vh-56px)] overflow-y-auto p-4 hidden lg:block text-xs space-y-6 select-none">
       {/* Trending Tags Section */}
