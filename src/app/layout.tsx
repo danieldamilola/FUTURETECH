@@ -3,6 +3,8 @@ import "./globals.css";
 import { TopNav } from "@/components/layout/top-nav";
 import { Sidebar } from "@/components/layout/sidebar";
 import { RightSidebar } from "@/components/layout/right-sidebar";
+import { MobileNav } from "@/components/layout/mobile-nav";
+import { CommandPalette } from "@/components/ui/command-palette";
 
 export const metadata: Metadata = {
   title: "FutureTech — The Developer Platform",
@@ -17,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)]">
+        <div className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)] pb-16 md:pb-0">
           <TopNav />
           <div className="flex-1 flex w-full justify-between items-stretch">
             <Sidebar />
@@ -26,6 +28,8 @@ export default function RootLayout({
             </main>
             <RightSidebar />
           </div>
+          <MobileNav />
+          <CommandPalette />
         </div>
       </body>
     </html>
