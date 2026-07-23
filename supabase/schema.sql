@@ -21,6 +21,7 @@ CREATE TABLE profiles (
   display_name TEXT NOT NULL,
   avatar_url TEXT,
   bio TEXT,
+  location TEXT,
   website_url TEXT,
   github_url TEXT,
   twitter_url TEXT,
