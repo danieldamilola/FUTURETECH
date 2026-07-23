@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { VoteControl } from "@/components/ui/vote-control";
 import { ContentTag } from "@/components/ui/content-tag";
+import { BookmarkButton } from "@/components/ui/bookmark-button";
 import { createAnswer, acceptAnswer } from "@/lib/actions/answers";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Share2 } from "lucide-react";
 
 interface AnswerItem {
   id: string;
@@ -126,6 +127,12 @@ export default function QuestionDetailPage() {
             <span>4h ago</span>
             <span>·</span>
             <span>312 views</span>
+            <span className="ml-auto flex items-center gap-1.5">
+              <BookmarkButton targetType="question" targetId="1" />
+              <button type="button" aria-label="Share question" className="p-1 text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
+            </span>
           </div>
 
           <div className="text-xs leading-relaxed text-[var(--ink)] space-y-4">

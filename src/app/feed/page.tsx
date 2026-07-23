@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { VoteControl } from "@/components/ui/vote-control";
 import { ContentTag, ContentType } from "@/components/ui/content-tag";
+import { BookmarkButton } from "@/components/ui/bookmark-button";
 import { cn } from "@/lib/utils";
+import { Share2 } from "lucide-react";
 
 interface FeedItem {
   id: string;
@@ -170,7 +172,7 @@ export default function FeedPage() {
               </p>
 
               {/* Mono Metadata Line */}
-              <div className="text-[11px] text-[var(--ink-muted)] font-mono-numbers flex items-center gap-2">
+              <div className="text-[11px] text-[var(--ink-muted)] font-mono-numbers flex items-center gap-2 flex-wrap">
                 <span>{item.author}</span>
                 <span>·</span>
                 <span>{item.timeAgo}</span>
@@ -178,6 +180,12 @@ export default function FeedPage() {
                 <span>{item.commentsCount} comments</span>
                 <span>·</span>
                 <span>{item.readTimeMins} min read</span>
+                <span className="ml-auto flex items-center gap-1">
+                  <BookmarkButton targetType={item.type === "question" ? "question" : item.type === "podcast" ? "podcast" : "article"} targetId={item.id} />
+                  <button type="button" aria-label="Share" className="p-1 text-[var(--ink-muted)] hover:text-[var(--ink)] transition-colors cursor-pointer">
+                    <Share2 className="w-3.5 h-3.5" />
+                  </button>
+                </span>
               </div>
             </div>
           </div>

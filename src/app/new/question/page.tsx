@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Editor } from "@/components/ui/editor";
+import { HashtagInput } from "@/components/ui/hashtag-input";
 import { createQuestion } from "@/lib/actions/questions";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 
@@ -12,21 +13,10 @@ export default function NewQuestionPage() {
   const [title, setTitle] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
   const [bodyJson, setBodyJson] = useState<object>({});
-  const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>(["Rust"]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const addTag = () => {
-    if (tagInput.trim() && tags.length < 5) {
-      setTags([...tags, tagInput.trim().toUpperCase()]);
-      setTagInput("");
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter((t) => t !== tagToRemove));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,45 +85,7 @@ export default function NewQuestionPage() {
           />
         </div>
 
-        <div>
-          <label className="block text-[var(--ink-muted)] mb-1 font-medium">
-            Category Tags (max 5)
-          </label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              placeholder="e.g. RUST, TOKIO"
-              className="flex-1 px-3 py-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--ink)] placeholder-[var(--ink-muted)] focus:outline-none focus:border-[var(--accent)] uppercase"
-            />
-            <button
-              type="button"
-              onClick={addTag}
-              className="px-3 py-1.5 bg-[var(--surface-high)] text-[var(--ink)] font-medium rounded-[var(--radius-sm)] hover:bg-[var(--surface-hover)] cursor-pointer"
-            >
-              Add Tag
-            </button>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--surface-high)] text-[var(--ink)] text-[11px] font-mono-numbers"
-              >
-                <span>{tag}</span>
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  className="text-[var(--ink-muted)] hover:text-[var(--danger)]"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
+        <HashtagInput tags={tags} onChange={setTags} />
 
         <div>
           <label className="block text-[var(--ink-muted)] mb-1 font-medium">

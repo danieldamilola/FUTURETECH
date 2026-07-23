@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { VoteControl } from "@/components/ui/vote-control";
 import { ContentTag } from "@/components/ui/content-tag";
+import { BookmarkButton } from "@/components/ui/bookmark-button";
 import { Plus, CheckCircle2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -154,7 +155,7 @@ export default function QuestionsPage() {
                 {q.excerpt}
               </p>
 
-              <div className="text-[11px] text-[var(--ink-muted)] font-mono-numbers flex items-center gap-2">
+              <div className="text-[11px] text-[var(--ink-muted)] font-mono-numbers flex items-center gap-2 flex-wrap">
                 <span>{q.author}</span>
                 <span>·</span>
                 <span>{q.timeAgo}</span>
@@ -165,6 +166,9 @@ export default function QuestionsPage() {
                 </span>
                 <span>·</span>
                 <span>{q.views} views</span>
+                <span className="ml-auto">
+                  <BookmarkButton targetType="question" targetId={q.id} />
+                </span>
               </div>
             </div>
           </div>

@@ -91,7 +91,7 @@ export default function BookmarksPage() {
                 </div>
 
                 <h2 className="text-sm font-medium text-[var(--ink)] group-hover:text-[var(--accent)] transition-colors leading-snug mb-1">
-                  <Link href={`/blog/${item.slug}`}>{item.title}</Link>
+                  <Link href={item.type === "question" ? `/questions/${item.id}` : `/articles/${item.slug}`}>{item.title}</Link>
                 </h2>
 
                 <p className="text-xs text-[var(--ink-muted)] line-clamp-2 mb-2 leading-relaxed">

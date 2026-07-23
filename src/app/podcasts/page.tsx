@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { AudioPlayer } from "@/components/podcasts/audio-player";
+import { BookmarkButton } from "@/components/ui/bookmark-button";
 import { Headphones, Clock, Calendar } from "lucide-react";
 
 interface PodcastEpisode {
@@ -100,7 +101,7 @@ export default function PodcastsPage() {
                 </span>
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {Math.floor(ep.durationSeconds / 60)} mins
+                  {String(Math.floor(ep.durationSeconds / 60)).padStart(2, "0")}:{String(ep.durationSeconds % 60).padStart(2, "0")}
                 </span>
               </div>
             </div>
@@ -122,6 +123,7 @@ export default function PodcastsPage() {
               >
                 Listen to Episode & Show Notes →
               </Link>
+              <BookmarkButton targetType="podcast" targetId={ep.id} />
             </div>
           </article>
         ))}

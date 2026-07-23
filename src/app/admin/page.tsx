@@ -258,10 +258,10 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => handleBanToggle(u.id, u.isBanned)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-[var(--radius-sm)] border transition-colors flex items-center gap-1.5 cursor-pointer ${
                     u.isBanned
-                      ? "bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-900/50"
-                      : "bg-rose-950/40 border border-rose-500/30 text-rose-400 hover:bg-rose-900/50"
+                      ? "bg-[var(--success)]/10 border-[var(--success)]/30 text-[var(--success)] hover:bg-[var(--success)]/20"
+                      : "bg-[var(--danger)]/10 border-[var(--danger)]/30 text-[var(--danger)] hover:bg-[var(--danger)]/20"
                   }`}
                 >
                   {u.isBanned ? (
@@ -299,7 +299,7 @@ export default function AdminPage() {
           </div>
           <div className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)]">
             <div className="text-[10px] font-semibold text-[var(--ink-muted)] uppercase tracking-wider">Active Jobs</div>
-            <div className="text-xl font-bold font-mono-numbers text-amber-400 mt-1">42</div>
+            <div className="text-xl font-bold font-mono-numbers text-[var(--accent)] mt-1">42</div>
           </div>
         </div>
       )}
