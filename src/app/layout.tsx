@@ -1,0 +1,33 @@
+import type { Metadata } from "next";
+import "./globals.css";
+import { TopNav } from "@/components/layout/top-nav";
+import { Sidebar } from "@/components/layout/sidebar";
+import { RightSidebar } from "@/components/layout/right-sidebar";
+
+export const metadata: Metadata = {
+  title: "FutureTech — The Developer Platform",
+  description: "Research-grounded platform for technical reading, Q&A, podcasts, careers, and mentorship.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body>
+        <div className="min-h-screen flex flex-col bg-[var(--bg)] text-[var(--ink)]">
+          <TopNav />
+          <div className="flex-1 flex w-full justify-between items-stretch">
+            <Sidebar />
+            <main className="flex-1 min-w-0 p-4 md:p-6 flex flex-col items-center">
+              <div className="w-full max-w-[820px]">{children}</div>
+            </main>
+            <RightSidebar />
+          </div>
+        </div>
+      </body>
+    </html>
+  );
+}

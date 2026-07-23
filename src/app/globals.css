@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Terminal Register Tokens (Dark Slate) */
+    --bg: #12151A;
+    --surface: #1A1F25;
+    --surface-hover: #212730;
+    --surface-high: #2B333D;
+
+    --ink: #E7EAE6;
+    --ink-muted: #838E8A;
+    --ink-faint: #4C5550;
+
+    --border: rgba(231, 234, 230, 0.08);
+    --border-strong: rgba(231, 234, 230, 0.14);
+
+    --accent: #4C8C82;       /* Muted Teal — upvote, primary CTAs */
+    --accent-soft: rgba(76, 140, 130, 0.14);
+    --downvote: #A15D63;     /* Dusty Rose-Brick */
+    --downvote-soft: rgba(161, 93, 99, 0.14);
+    --danger: #C24B3A;
+    --success: #6B9E78;
+
+    --radius-sm: 3px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+
+    --font-ui: 'Switzer', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', Consolas, monospace;
+
+    --text-xs: 11px;
+    --text-sm: 13px;
+    --text-md: 15px;
+    --text-lg: 18px;
+    --text-xl: 26px;
+
+    --line-tight: 1.35;
+    --line-body: 1.55;
+
+    /* Content Type Classifiers */
+    --classifier-article: #8FAF8A;
+    --classifier-question: #7FA8C9;
+    --classifier-podcast: #C9954C;
+    --classifier-job: #9C9587;
+    --classifier-mentor: #A990B8;
+
+    /* Dark Night Reading Register (Default for Articles — prevents flashbang) */
+    --page-bg: #16191E;
+    --page-surface: #1E232B;
+    --page-ink: #E6E1D8;
+    --page-muted: #9E968B;
+    --page-border: rgba(230, 225, 216, 0.10);
+    --page-accent: #D97745;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-read-body: 'Switzer', system-ui, sans-serif;
+    --page-text-title: 38px;
+    --page-text-deck: 18px;
+    --page-text-body: 17px;
+    --line-read: 1.7;
+  }
+
+  * {
+    border-color: var(--border);
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: var(--text-md);
+    line-height: var(--line-body);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .font-mono-numbers,
+  .tabular-nums,
+  [data-numeric="true"] {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Page Register Article Reading Container */
+  .register-page {
+    background-color: var(--page-bg);
+    color: var(--page-ink);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--page-border);
+  }
+}
