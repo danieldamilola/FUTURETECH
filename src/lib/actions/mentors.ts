@@ -12,6 +12,7 @@ const mentorModeSchema = z.object({
   hourly_rate_cents: z.number().min(0).optional(),
   bio: z.string().min(10).optional(),
   is_accepting_sessions: z.boolean().optional(),
+  expertise_tags: z.array(z.string()).optional(),
 });
 
 export async function updateMentorMode(input: z.infer<typeof mentorModeSchema>): Promise<ActionResult<void>> {
@@ -38,6 +39,9 @@ export async function updateMentorMode(input: z.infer<typeof mentorModeSchema>):
     if (profileError) return errorResult(profileError.message);
 
     if (input.is_mentor) {
+      // Parse expertise tags (filter empties)
+      const tags = (input.expertise_tags || []).map((t) => t.trim()).filter(Boolean);
+
       // Upsert mentor_profiles
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: mentorError } = await (supabase.from("mentor_profiles") as any)
@@ -47,6 +51,7 @@ export async function updateMentorMode(input: z.infer<typeof mentorModeSchema>):
           hourly_rate_cents: input.hourly_rate_cents || 0,
           bio: input.bio || "Available for mentoring",
           is_accepting_sessions: input.is_accepting_sessions !== undefined ? input.is_accepting_sessions : true,
+          expertise_tags: tags,
         }, { onConflict: "user_id" });
 
       if (mentorError) return errorResult(mentorError.message);

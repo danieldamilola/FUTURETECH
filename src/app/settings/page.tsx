@@ -45,7 +45,7 @@ function ProfileTab() {
   const [form, setForm] = useState({
     displayName: "",
     username: "",
-    email: "", // We might not be able to change email here without triggering Supabase auth email change
+    email: "",
     bio: "",
     location: "",
     website: "",
@@ -58,6 +58,7 @@ function ProfileTab() {
     mentor_hourly_rate: 0,
     mentor_bio: "",
     mentor_is_accepting_sessions: true,
+    mentor_expertise_tags: "", // comma separated string
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,6 +91,7 @@ function ProfileTab() {
           mentor_hourly_rate: (mentorProfile?.hourly_rate_cents || 0) / 100,
           mentor_bio: mentorProfile?.bio || "",
           mentor_is_accepting_sessions: mentorProfile?.is_accepting_sessions !== false,
+          mentor_expertise_tags: (mentorProfile?.expertise_tags || []).join(", "),
         });
       }
       setLoading(false);
@@ -124,6 +126,7 @@ function ProfileTab() {
       hourly_rate_cents: Math.round(form.mentor_hourly_rate * 100),
       bio: form.mentor_bio,
       is_accepting_sessions: form.mentor_is_accepting_sessions,
+      expertise_tags: form.mentor_expertise_tags.split(",").map((t) => t.trim()).filter(Boolean),
     });
 
     setSaving(false);
@@ -251,10 +254,12 @@ function ProfileTab() {
       {/* Mentor Mode */}
       <div className={sectionCls}>
         <SectionTitle>Mentor Mode</SectionTitle>
+
+        {/* Enable toggle */}
         <div className="flex items-center justify-between py-1">
           <div>
             <p className="text-[var(--ink)] font-medium">Enable Mentor Profile</p>
-            <p className="text-[var(--ink-muted)] text-[11px] mt-0.5">Allow other users to book mentorship sessions with you.</p>
+            <p className="text-[var(--ink-muted)] text-[11px] mt-0.5">Allow other users to book sessions with you. Your card will appear on the Mentors page.</p>
           </div>
           <button
             type="button"
@@ -272,46 +277,12 @@ function ProfileTab() {
         </div>
 
         {form.is_mentor && (
-          <div className="space-y-4 pt-3 border-t border-[var(--border)] mt-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={labelCls}>Headline</label>
-                <input
-                  type="text"
-                  required
-                  value={form.mentor_headline}
-                  onChange={set("mentor_headline")}
-                  placeholder="e.g. Senior Frontend Engineer at TechCorp"
-                  className={inputCls}
-                />
-              </div>
-              <div>
-                <label className={labelCls}>Hourly Rate ($)</label>
-                <input
-                  type="number"
-                  required
-                  min="0"
-                  step="1"
-                  value={form.mentor_hourly_rate}
-                  onChange={(e) => setForm(p => ({ ...p, mentor_hourly_rate: parseFloat(e.target.value) || 0 }))}
-                  className={inputCls}
-                />
-              </div>
-            </div>
-            <div>
-              <label className={labelCls}>Mentor Bio</label>
-              <textarea
-                rows={3}
-                required
-                value={form.mentor_bio}
-                onChange={set("mentor_bio")}
-                placeholder="What can you help mentees with?"
-                className={`${inputCls} resize-none`}
-              />
-            </div>
-            <div className="flex items-center justify-between py-1 bg-[var(--surface-high)] px-3 rounded-[var(--radius-sm)]">
+          <div className="space-y-4 pt-4 border-t border-[var(--border)] mt-1">
+            {/* Accepting sessions toggle */}
+            <div className="flex items-center justify-between px-3 py-2.5 bg-[var(--surface-high)] rounded-[var(--radius-sm)]">
               <div>
                 <p className="text-[var(--ink)] font-medium text-xs">Accepting Sessions</p>
+                <p className="text-[var(--ink-faint)] text-[11px] mt-0.5">Turn off to pause new bookings without deleting your profile.</p>
               </div>
               <button
                 type="button"
@@ -326,6 +297,74 @@ function ProfileTab() {
                   }`}
                 />
               </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Professional Headline *</label>
+                <input
+                  type="text"
+                  required={form.is_mentor}
+                  value={form.mentor_headline}
+                  onChange={set("mentor_headline")}
+                  placeholder="Senior Frontend Engineer at TechCorp"
+                  className={inputCls}
+                />
+                <p className="text-[var(--ink-faint)] text-[11px] mt-1">Shown on your mentor card.</p>
+              </div>
+
+              <div>
+                <label className={labelCls}>Hourly Rate (USD)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] select-none font-mono-numbers">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.mentor_hourly_rate}
+                    onChange={(e) => setForm(p => ({ ...p, mentor_hourly_rate: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0"
+                    className={`${inputCls} pl-6`}
+                  />
+                </div>
+                <p className="text-[var(--ink-faint)] text-[11px] mt-1">Enter 0 for free sessions.</p>
+              </div>
+            </div>
+
+            <div>
+              <label className={labelCls}>Expertise Tags</label>
+              <input
+                type="text"
+                value={form.mentor_expertise_tags}
+                onChange={set("mentor_expertise_tags")}
+                placeholder="React, TypeScript, System Design, Career (comma separated)"
+                className={inputCls}
+              />
+              <p className="text-[var(--ink-faint)] text-[11px] mt-1">
+                Separate tags with commas. These appear as chips on your mentor card.
+              </p>
+              {form.mentor_expertise_tags && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {form.mentor_expertise_tags.split(",").map((t) => t.trim()).filter(Boolean).map((tag) => (
+                    <span key={tag} className="px-2 py-0.5 text-[10px] rounded-[var(--radius-sm)] font-medium" style={{ background: "rgba(169,144,184,0.15)", color: "#A990B8" }}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className={labelCls}>Mentor Bio *</label>
+              <textarea
+                rows={4}
+                required={form.is_mentor}
+                value={form.mentor_bio}
+                onChange={set("mentor_bio")}
+                placeholder="Describe your mentoring approach, what you can help with, and what mentees should expect from a session with you..."
+                className={`${inputCls} resize-none leading-relaxed`}
+              />
+              <p className="text-[var(--ink-faint)] text-[11px] mt-1">Min. 10 characters. Be specific — it helps mentees choose you.</p>
             </div>
           </div>
         )}
