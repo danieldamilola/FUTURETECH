@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { VoteControl } from "@/components/ui/vote-control";
 import { ContentTag } from "@/components/ui/content-tag";
-import { Globe, Award, Calendar, Link2 } from "lucide-react";
+import { FollowButton } from "@/components/ui/follow-button";
+import { Globe, Award, Calendar, Link2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
@@ -28,18 +29,32 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-mono-numbers font-medium">
                 <Award className="w-3.5 h-3.5" />
                 <span>1,420 karma</span>
               </div>
+              <FollowButton targetType="user" targetId="priya_sharma" initialFollowing={false} size="sm" />
+            </div>
             </div>
 
             <p className="text-xs text-[var(--ink-muted)] mt-2 leading-relaxed">
               Software engineer working on distributed systems, TypeScript, and Rust. Writing about WebAssembly and edge computing.
             </p>
 
+            {/* Follow stats */}
+            <div className="flex items-center gap-4 mt-2 text-[11px] font-mono-numbers text-[var(--ink-muted)]">
+              <span className="flex items-center gap-1">
+                <Users className="w-3 h-3 opacity-70" />
+                <span className="text-[var(--ink)] font-semibold">284</span> followers
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="text-[var(--ink)] font-semibold">91</span> following
+              </span>
+            </div>
+
             {/* Links & Join Date */}
-            <div className="flex items-center gap-4 mt-3 text-[11px] text-[var(--ink-muted)] flex-wrap font-mono-numbers">
+            <div className="flex items-center gap-4 mt-2 text-[11px] text-[var(--ink-muted)] flex-wrap font-mono-numbers">
               <span className="flex items-center gap-1">
                 <Calendar className="w-3 h-3 opacity-70" />
                 Joined Jan 2025

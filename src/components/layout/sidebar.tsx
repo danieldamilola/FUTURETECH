@@ -18,6 +18,8 @@ import {
   Users,
   Briefcase,
   Mail,
+  Mic,
+  PenLine,
 } from "lucide-react";
 
 const discoverNav = [
@@ -32,6 +34,12 @@ const yoursNav = [
   { name: "Drafts", href: "/drafts", icon: FileEdit },
   { name: "Bookmarks", href: "/bookmarks", icon: Bookmark },
   { name: "Settings", href: "/settings", icon: Settings },
+];
+
+const publishNav = [
+  { name: "Write Article", href: "/new/post", icon: PenLine },
+  { name: "Ask Question", href: "/new/question", icon: HelpCircle },
+  { name: "Start a Show", href: "/new/podcast", icon: Mic },
 ];
 
 const communityNav = [
@@ -69,7 +77,7 @@ export function Sidebar() {
   if (!isLoggedIn) {
     return (
       <>
-        <aside className="w-[260px] shrink-0 border-r border-[var(--border)] bg-[var(--bg)] sticky top-[56px] h-[calc(100vh-56px)] overflow-y-auto p-4 hidden md:block select-none">
+        <aside className="w-[240px] shrink-0 border-r border-[var(--border)] bg-[var(--bg)] sticky top-[56px] h-[calc(100vh-56px)] overflow-y-auto p-4 hidden md:block select-none">
           <div className="p-4 rounded-[var(--radius-lg)] bg-[#16191E] border border-[var(--border-strong)] text-center space-y-4 shadow-md">
             <h2 className="text-base font-bold text-[var(--ink)] leading-snug tracking-tight">
               Join the developer network
@@ -148,8 +156,10 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="w-[220px] shrink-0 border-r border-[var(--border)] bg-[var(--bg)] sticky top-[56px] h-[calc(100vh-56px)] overflow-y-auto p-3 hidden md:block select-none">
+    <aside className="w-[240px] shrink-0 border-r border-[var(--border)] bg-[var(--bg)] sticky top-[56px] h-[calc(100vh-56px)] overflow-y-auto p-3 hidden md:block select-none">
       {renderNavGroup("Discover", discoverNav)}
+      <div className="my-3 border-t border-[var(--border)]" />
+      {renderNavGroup("Publish", publishNav)}
       <div className="my-3 border-t border-[var(--border)]" />
       {renderNavGroup("Yours", yoursNav)}
       <div className="my-3 border-t border-[var(--border)]" />
