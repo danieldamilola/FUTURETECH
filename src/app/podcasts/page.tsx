@@ -1,109 +1,130 @@
-"use client";
+import React from "react";
+import Link from "next/link";
+import { AudioPlayer } from "@/components/podcasts/audio-player";
+import { Headphones, Clock, Calendar } from "lucide-react";
 
-import React, { useState } from "react";
-import { ContentTag } from "@/components/ui/content-tag";
-import { Play, Pause } from "lucide-react";
-
-interface Episode {
+interface PodcastEpisode {
   id: string;
-  tag: string;
   title: string;
-  host: string;
+  slug: string;
   description: string;
-  duration: string;
-  date: string;
+  audioUrl: string;
+  durationSeconds: number;
+  publishedAt: string;
+  hostName: string;
 }
 
-const episodes: Episode[] = [
+const mockEpisodes: PodcastEpisode[] = [
   {
     id: "1",
-    tag: "AI/ML",
-    title: "The context window wars: why longer isn't always better",
-    host: "Dr. Amanda Chen & Riku Yamamoto",
-    description: "We talk to researchers from Anthropic and DeepMind about the real tradeoffs in extending context windows beyond 100k tokens and what 'attention' actually costs.",
-    duration: "47:32",
-    date: "Jan 13, 2026",
+    title: "Building High-Throughput Distributed KV Stores with Cloudflare Workers & Durable Objects",
+    slug: "kv-stores-cloudflare-durable-objects",
+    description: "Elena Vasquez joins us to discuss multi-region key-value consistency, state replication, and avoiding deadlock pitfalls in serverless edge runtimes.",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    durationSeconds: 2820,
+    publishedAt: "July 22, 2026",
+    hostName: "Marcus Webb",
   },
   {
     id: "2",
-    tag: "STARTUP",
-    title: "Building in public: the honest numbers behind our $2M ARR journey",
-    host: "Ava Torres",
-    description: "Ava Torres, founder of Flowline, shares real CAC, churn, and burn rate numbers from their $0–$2M ARR journey. No vague percentages, no survivorship bias.",
-    duration: "52:14",
-    date: "Jan 10, 2026",
+    title: "Rust Memory Safety & Concurrency without Arc<Mutex<T>> Deadlocks",
+    slug: "rust-memory-safety-concurrency",
+    description: "Dae-Jung Kim breaks down channel-based message passing, lock-free lock ordering, and asynchronous execution patterns in high-concurrency systems.",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+    durationSeconds: 1980,
+    publishedAt: "July 18, 2026",
+    hostName: "Priya Sharma",
   },
   {
     id: "3",
-    tag: "POSTGRESQL",
-    title: "Postgres as a queue: when it actually works and when it definitely does not",
-    host: "Paul Ramirez",
-    description: "Paul from PGMQ walks through the practical realities of using Postgres as a message queue for workloads up to 10k msg/s. Advisory locks, SKIP LOCKED, and failure modes.",
-    duration: "38:55",
-    date: "Jan 7, 2026",
+    title: "The Context Window Wars: Scaling LLM Attention Beyond 1M Tokens",
+    slug: "context-window-wars-llm-attention",
+    description: "DeepMind and Anthropic researchers talk memory-efficient attention mechanisms, RAG vs long-context tradeoffs, and future AI developer tools.",
+    audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+    durationSeconds: 3120,
+    publishedAt: "July 12, 2026",
+    hostName: "FutureTech Editorial",
   },
 ];
 
 export default function PodcastsPage() {
-  const [playingId, setPlayingId] = useState<string | null>(null);
-
-  const togglePlay = (id: string) => {
-    setPlayingId(playingId === id ? null : id);
-  };
-
   return (
-    <div className="w-full space-y-6">
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-        <h1 className="text-sm font-medium text-[var(--ink)]">Podcasts</h1>
-        <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">
-          {episodes.length} episodes
-        </span>
+    <div className="space-y-6">
+      {/* Header Banner */}
+      <div className="p-5 rounded-[var(--radius-lg)] bg-[#16191E] border border-[var(--border-strong)] flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--accent)] mb-1">
+            <Headphones className="w-4 h-4" />
+            <span>Developer Audio</span>
+          </div>
+          <h1 className="text-xl font-bold text-[var(--ink)] tracking-tight">
+            FutureTech Podcasts
+          </h1>
+          <p className="text-xs text-[var(--ink-muted)] mt-1">
+            Deep-dive technical interviews, system architecture breakdowns, and career insights.
+          </p>
+        </div>
       </div>
 
-      <div className="divide-y divide-[var(--border)]">
-        {episodes.map((ep) => {
-          const isPlaying = playingId === ep.id;
-          return (
-            <div key={ep.id} className="py-4 flex gap-4 items-start">
-              <button
-                type="button"
-                onClick={() => togglePlay(ep.id)}
-                className="w-10 h-10 rounded-full bg-[var(--surface)] hover:bg-[var(--surface-high)] border border-[var(--border)] flex items-center justify-center text-[var(--accent)] shrink-0 transition-colors cursor-pointer"
-                aria-label={isPlaying ? "Pause episode" : "Play episode"}
-              >
-                {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
-              </button>
+      {/* Featured Latest Episode Player */}
+      <div>
+        <h2 className="text-xs font-semibold tracking-wider text-[var(--ink-muted)] uppercase mb-3">
+          Featured Episode
+        </h2>
+        <AudioPlayer
+          title={mockEpisodes[0].title}
+          audioUrl={mockEpisodes[0].audioUrl}
+          durationSeconds={mockEpisodes[0].durationSeconds}
+        />
+      </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <ContentTag type="podcast" label={ep.tag} />
-                </div>
+      {/* Episodes List */}
+      <div className="space-y-4">
+        <h2 className="text-xs font-semibold tracking-wider text-[var(--ink-muted)] uppercase">
+          All Episodes
+        </h2>
 
-                <h2 className="text-sm font-medium text-[var(--ink)] mb-1 leading-snug">
-                  {ep.title}
-                </h2>
-
-                <div className="text-xs text-[var(--ink-muted)] mb-2">with {ep.host}</div>
-
-                <p className="text-xs text-[var(--ink-muted)] line-clamp-2 mb-3 leading-relaxed">
-                  {ep.description}
-                </p>
-
-                {/* Scrubber indicator */}
-                {isPlaying && (
-                  <div className="w-full bg-[var(--surface)] h-1 rounded-full overflow-hidden mb-2">
-                    <div className="bg-[var(--accent)] h-full w-1/3 animate-pulse" />
-                  </div>
-                )}
-
-                <div className="text-[11px] text-[var(--ink-muted)] font-mono-numbers flex items-center justify-between">
-                  <span>{ep.date}</span>
-                  <span>{ep.duration}</span>
-                </div>
+        {mockEpisodes.map((ep) => (
+          <article
+            key={ep.id}
+            className="p-4 rounded-[var(--radius-md)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] border border-[var(--border)] transition-colors space-y-2.5"
+          >
+            <div className="flex items-center justify-between text-[11px] text-[var(--ink-muted)] font-mono-numbers">
+              <span className="flex items-center gap-1.5 text-[var(--accent)] font-semibold">
+                Hosted by {ep.hostName}
+              </span>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {ep.publishedAt}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {Math.floor(ep.durationSeconds / 60)} mins
+                </span>
               </div>
             </div>
-          );
-        })}
+
+            <Link href={`/podcasts/${ep.slug}`} className="block">
+              <h3 className="text-sm font-bold text-[var(--ink)] hover:text-[var(--accent)] transition-colors">
+                {ep.title}
+              </h3>
+            </Link>
+
+            <p className="text-xs text-[var(--ink-muted)] leading-relaxed">
+              {ep.description}
+            </p>
+
+            <div className="pt-2 flex items-center justify-between border-t border-[var(--border)]">
+              <Link
+                href={`/podcasts/${ep.slug}`}
+                className="text-xs text-[var(--accent)] hover:underline font-medium flex items-center gap-1"
+              >
+                Listen to Episode & Show Notes →
+              </Link>
+            </div>
+          </article>
+        ))}
       </div>
     </div>
   );
