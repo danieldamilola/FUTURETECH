@@ -47,7 +47,7 @@ function ShowCard({ show }: { show: any }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-[#C9954C] mb-1 block">
+        <span className="text-[10px] font-semibold uppercase tracking-widest mb-1 block" style={{ color: "var(--classifier-podcast)" }}>
           {show.category}
         </span>
         <Link href={`/podcasts/show/${show.slug}`}>

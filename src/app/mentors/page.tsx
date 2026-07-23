@@ -93,11 +93,11 @@ export default async function MentorsPage() {
                       <span>{rate}</span>
                       <span className="text-xs font-normal text-[var(--ink-muted)]">/45m</span>
                     </div>
-                    <div className="flex items-center gap-1 text-[11px] font-mono-numbers text-[var(--ink-muted)] mt-0.5">
-                      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                      <span className="font-bold text-[var(--ink)]">5.0</span>
-                      <span>(New)</span>
-                    </div>
+                  {/* Reputation (real data) */}
+                  <div className="flex items-center gap-1 text-[11px] font-mono-numbers text-[var(--ink-muted)] mt-0.5">
+                    <span className="font-bold text-[var(--accent)]">{profile.reputation ?? 0}</span>
+                    <span>rep</span>
+                  </div>
                   </div>
                 </div>
 
@@ -111,9 +111,10 @@ export default async function MentorsPage() {
                     {Array.isArray(expertise_tags) && expertise_tags.map((tag: string) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 rounded text-[10px] font-mono-numbers bg-[var(--surface-high)] text-[var(--ink-muted)] border border-[var(--border)]"
+                        className="px-2 py-0.5 rounded-[var(--radius-sm)] text-[10px] font-medium"
+                        style={{ background: "rgba(169,144,184,0.15)", color: "var(--classifier-mentor)" }}
                       >
-                        #{tag}
+                        {tag}
                       </span>
                     ))}
                   </div>

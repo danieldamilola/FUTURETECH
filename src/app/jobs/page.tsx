@@ -118,7 +118,10 @@ export default async function JobsPage() {
               <div className="pt-2 flex items-center justify-between border-t border-[var(--border)]">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {job.employment_type && (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono-numbers bg-[var(--surface-high)] text-[var(--ink-muted)] border border-[var(--border)]">
+                    <span
+                      className="px-2 py-0.5 rounded-[var(--radius-sm)] text-[10px] font-medium"
+                      style={{ background: "rgba(156,149,135,0.15)", color: "var(--classifier-job)" }}
+                    >
                       {formatEmploymentType(job.employment_type)}
                     </span>
                   )}
