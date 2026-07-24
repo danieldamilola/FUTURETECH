@@ -99,7 +99,7 @@ export function AuthModal({
   };
 
   const inputCls =
-    "w-full px-3 py-2 bg-[#0D1117] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--ink)] placeholder:text-[var(--ink-faint)] focus:outline-none focus:border-[var(--accent)] transition-colors text-xs";
+    "w-full px-3 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--ink)] text-xs focus:outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--ink-muted)]";
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>

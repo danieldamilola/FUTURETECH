@@ -16,7 +16,7 @@ const CATEGORIES = [
   "DevOps", "Security", "Career", "Open Source", "Product",
 ];
 
-const inputCls = "w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--ink)] text-xs focus:outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--ink-faint)]";
+const inputCls = "w-full px-3 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-sm)] text-[var(--ink)] text-xs focus:outline-none focus:border-[var(--accent)] transition-colors placeholder:text-[var(--ink-muted)]";
 const labelCls = "block text-[11px] font-semibold text-[var(--ink-muted)] uppercase tracking-wide mb-1.5";
 
 export default function NewPodcastPage() {
