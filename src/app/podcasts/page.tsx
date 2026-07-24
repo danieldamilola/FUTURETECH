@@ -221,21 +221,18 @@ export default async function PodcastsPage({
 
   return (
     <div className="w-full space-y-6">
-      {/* Page header */}
       <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
         <h1 className="text-sm font-medium text-[var(--ink)]">Developer Audio</h1>
         <div className="flex items-center gap-4">
           <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">FutureTech Podcasts</span>
+          <Link
+            href="/new/podcast"
+            className="text-[var(--accent)] text-xs hover:underline flex items-center gap-1"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Start a Show</span>
+          </Link>
         </div>
-      </div>
-
-        <Link
-          href="/new/podcast"
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent)] text-[var(--bg)] text-xs font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity shrink-0"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Start a Show
-        </Link>
       </div>
 
       {/* Tab Navigation */}

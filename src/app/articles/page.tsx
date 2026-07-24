@@ -68,10 +68,11 @@ export default function ArticlesPage() {
 
   return (
     <div className="w-full">
-      {/* Page header */}
-      <div className="mb-5">
-        <h1 className="text-base font-bold text-[var(--ink)] tracking-tight">Articles</h1>
-        <p className="text-xs text-[var(--ink-muted)] mt-0.5">Long-form technical writing from the community.</p>
+      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
+        <h1 className="text-sm font-medium text-[var(--ink)]">Technical Articles</h1>
+        <div className="flex items-center gap-4">
+          <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">Long-form writing</span>
+        </div>
       </div>
 
       {/* Tabs */}
