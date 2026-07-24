@@ -30,20 +30,16 @@ export default async function BookmarksPage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
         <h1 className="text-sm font-medium text-[var(--ink)]">Saved Bookmarks</h1>
-        <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">
-          {bookmarks.length} items
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">{bookmarks.length} items</span>
+        </div>
       </div>
 
       {bookmarks.length === 0 ? (
-        <div className="py-12 text-center text-xs text-[var(--ink-muted)] border border-dashed border-[var(--border)] rounded-[var(--radius-md)]">
-          <Bookmark className="w-8 h-8 mx-auto mb-2 opacity-50 text-[var(--ink-muted)]" />
-          <p className="mb-3">No bookmarks yet. Explore the feed and save articles.</p>
-          <Link href="/feed" className="text-[var(--accent)] hover:underline">
-            Explore articles & podcasts →
-          </Link>
+        <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+          No bookmarks found. <Link href="/feed" className="text-[var(--accent)] hover:underline">Explore the feed to add one.</Link>
         </div>
       ) : (
         <div className="divide-y divide-[var(--border)]">

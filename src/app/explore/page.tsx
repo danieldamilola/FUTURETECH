@@ -14,20 +14,16 @@ export default async function ExplorePage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-        <div className="flex items-center gap-2">
-          <Compass className="w-4 h-4 text-[var(--accent)]" />
-          <h1 className="text-sm font-medium text-[var(--ink)]">Explore Topics</h1>
+      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
+        <h1 className="text-sm font-medium text-[var(--ink)]">Explore Topics</h1>
+        <div className="flex items-center gap-4">
+          <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">{tagsList.length} topics</span>
         </div>
-        <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">
-          {tagsList.length} topics
-        </span>
       </div>
 
       {tagsList.length === 0 ? (
-        <div className="py-16 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)]">
-          <Compass className="w-8 h-8 mx-auto mb-3 text-[var(--ink-muted)] opacity-50" />
-          <p className="text-sm font-semibold text-[var(--ink)] mb-1">No topics yet.</p>
+        <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+          No topics found. <Link href="/feed" className="text-[var(--accent)] hover:underline">Explore the feed.</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

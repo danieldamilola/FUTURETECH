@@ -107,14 +107,13 @@ export default function QuestionsPage() {
           ))}
         </div>
       ) : questions.length === 0 ? (
-        <div className="py-16 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)] space-y-2">
-          <p className="text-sm font-semibold text-[var(--ink)]">No questions yet. Ask the first one!</p>
-          <Link href="/new/question" className="text-xs text-[var(--accent)] hover:underline">Ask Question</Link>
+        <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+          No questions found. <Link href="/feed" className="text-[var(--accent)] hover:underline">Explore the feed.</Link>
         </div>
       ) : (
         <div className="divide-y divide-[var(--border)]">
           {filteredQuestions.length === 0 ? (
-            <div className="py-8 text-center text-xs text-[var(--ink-muted)]">No questions match this filter.</div>
+            <div className="py-12 text-center text-[var(--ink-muted)] text-sm">No questions match this filter.</div>
           ) : (
             filteredQuestions.map((q) => (
               <div key={q.id} className="py-4 flex gap-4 items-start group">

@@ -222,17 +222,12 @@ export default async function PodcastsPage({
   return (
     <div className="w-full space-y-6">
       {/* Page header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] pb-4">
-        <div>
-          <div className="flex items-center gap-2 text-[var(--accent)] mb-1">
-            <Headphones className="w-4 h-4" />
-            <span className="text-[11px] font-semibold uppercase tracking-widest">FutureTech Podcasts</span>
-          </div>
-          <h1 className="text-lg font-bold text-[var(--ink)] tracking-tight">Developer Audio</h1>
-          <p className="text-xs text-[var(--ink-muted)] mt-0.5">
-            Technical deep-dives, architecture breakdowns, and career insights — created by the community.
-          </p>
+      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
+        <h1 className="text-sm font-medium text-[var(--ink)]">Developer Audio</h1>
+        <div className="flex items-center gap-4">
+          <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">FutureTech Podcasts</span>
         </div>
+      </div>
 
         <Link
           href="/new/podcast"
@@ -301,7 +296,9 @@ export default async function PodcastsPage({
               </div>
             </div>
           ) : (
-            <div className="py-12 text-center text-[var(--ink-muted)] text-sm">No episodes yet.</div>
+            <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+              No episodes yet. <Link href="/feed" className="text-[var(--accent)] hover:underline">Explore the feed.</Link>
+            </div>
           )}
 
           {/* More Trending */}
@@ -335,9 +332,8 @@ export default async function PodcastsPage({
               }
             />
             {shows.length === 0 ? (
-              <div className="py-12 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)] space-y-2">
-                <p className="text-sm font-semibold text-[var(--ink)]">No podcast shows yet.</p>
-                <Link href="/new/podcast" className="text-xs text-[var(--accent)] hover:underline">Start your own show!</Link>
+              <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+                No podcast shows found. <Link href="/feed" className="text-[var(--accent)] hover:underline">Explore the feed.</Link>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -354,18 +350,8 @@ export default async function PodcastsPage({
       {activeTab === "following" && (
         <div className="space-y-4">
           {!user ? (
-            <div className="py-16 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)]">
-              <Users className="w-8 h-8 mx-auto mb-3 text-[var(--ink-muted)] opacity-50" />
-              <p className="text-sm font-semibold text-[var(--ink)] mb-1">Sign in to see new episodes</p>
-              <p className="text-xs text-[var(--ink-muted)] mb-4">
-                Sign in to see new episodes from creators you follow.
-              </p>
-              <Link
-                href="/login"
-                className="px-3 py-1.5 text-xs font-medium bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity"
-              >
-                Sign In
-              </Link>
+            <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+              Sign in to see new episodes from creators you follow. <Link href="/login" className="text-[var(--accent)] hover:underline">Sign In</Link>
             </div>
           ) : hasFollowing ? (
             <>
@@ -381,18 +367,8 @@ export default async function PodcastsPage({
               </div>
             </>
           ) : (
-            <div className="py-16 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)]">
-              <Users className="w-8 h-8 mx-auto mb-3 text-[var(--ink-muted)] opacity-50" />
-              <p className="text-sm font-semibold text-[var(--ink)] mb-1">No shows followed yet</p>
-              <p className="text-xs text-[var(--ink-muted)] mb-4">
-                Follow some shows to see their episodes here.
-              </p>
-              <Link
-                href="/podcasts?tab=shows"
-                className="px-3 py-1.5 text-xs font-medium bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity"
-              >
-                Browse shows →
-              </Link>
+            <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+              No shows followed yet. <Link href="/podcasts?tab=shows" className="text-[var(--accent)] hover:underline">Browse shows.</Link>
             </div>
           )}
         </div>
@@ -407,9 +383,8 @@ export default async function PodcastsPage({
             subtitle={`${shows.length} shows from the community`}
           />
           {shows.length === 0 ? (
-            <div className="py-12 text-center border border-dashed border-[var(--border)] rounded-[var(--radius-md)] space-y-2">
-              <p className="text-sm font-semibold text-[var(--ink)]">No podcast shows yet.</p>
-              <Link href="/new/podcast" className="text-xs text-[var(--accent)] hover:underline">Start your own show!</Link>
+            <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+              No podcast shows found. <Link href="/feed" className="text-[var(--accent)] hover:underline">Explore the feed.</Link>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

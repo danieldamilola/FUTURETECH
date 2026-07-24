@@ -23,32 +23,18 @@ export default async function MentorsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="p-5 rounded-[var(--radius-lg)] bg-[#16191E] border border-[var(--border-strong)] flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--accent)] mb-1">
-            <Users className="w-4 h-4" />
-            <span>Developer Mentorship</span>
-          </div>
-          <h1 className="text-xl font-bold text-[var(--ink)] tracking-tight">
-            1-on-1 Technical Mentorship
-          </h1>
-          <p className="text-xs text-[var(--ink-muted)] mt-1">
-            Book private 45-minute code reviews, architecture consultations, and career advice with industry leaders.
-          </p>
+      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
+        <h1 className="text-sm font-medium text-[var(--ink)]">1-on-1 Mentorship</h1>
+        <div className="flex items-center gap-4">
+          <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">Available Mentors</span>
         </div>
       </div>
 
       {/* Mentors Directory List */}
       <div className="space-y-4">
         {!mentors || mentors.length === 0 ? (
-          <div className="p-10 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] text-center">
-            <h3 className="text-sm font-bold text-[var(--ink)] mb-1">
-              No Mentors Available
-            </h3>
-            <p className="text-xs text-[var(--ink-muted)]">
-              No mentors available right now. Check back soon or apply to become a mentor in Settings.
-            </p>
+          <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+            No mentors available right now. <Link href="/feed" className="text-[var(--accent)] hover:underline">Explore the feed.</Link>
           </div>
         ) : (
           mentors.map((mentor: any) => {

@@ -29,41 +29,25 @@ export default async function JobsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="p-5 rounded-[var(--radius-lg)] bg-[#16191E] border border-[var(--border-strong)] flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--accent)] mb-1">
-            <Briefcase className="w-4 h-4" />
-            <span>Developer Careers</span>
-          </div>
-          <h1 className="text-xl font-bold text-[var(--ink)] tracking-tight">
-            Tech Jobs & Opportunities
-          </h1>
-          <p className="text-xs text-[var(--ink-muted)] mt-1">
-            Verified roles at engineering-first companies building high-scale infrastructure.
-          </p>
+      <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-4">
+        <h1 className="text-sm font-medium text-[var(--ink)]">Tech Jobs & Opportunities</h1>
+        <div className="flex items-center gap-4">
+          <span className="font-mono-numbers text-xs text-[var(--ink-muted)]">Verified Roles</span>
+          <Link
+            href="/jobs/new"
+            className="text-[var(--accent)] text-xs hover:underline flex items-center gap-1"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Post a Job</span>
+          </Link>
         </div>
-
-        <Link
-          href="/jobs/new"
-          className="px-3 py-2 bg-[var(--accent)] text-[var(--bg)] font-medium text-xs rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity flex items-center gap-1.5 shrink-0"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Post a Job</span>
-        </Link>
       </div>
 
       {/* Jobs List */}
       <div className="space-y-3">
         {!jobs || jobs.length === 0 ? (
-          <div className="p-10 rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] text-center">
-            <Briefcase className="w-8 h-8 text-[var(--ink-muted)] mx-auto mb-3 opacity-50" />
-            <h3 className="text-sm font-bold text-[var(--ink)] mb-1">
-              No Job Listings Yet
-            </h3>
-            <p className="text-xs text-[var(--ink-muted)]">
-              Check back soon for new opportunities, or post a job yourself.
-            </p>
+          <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+            No job listings found. <Link href="/feed" className="text-[var(--accent)] hover:underline">Explore the feed.</Link>
           </div>
         ) : (
           jobs.map((job: any) => (

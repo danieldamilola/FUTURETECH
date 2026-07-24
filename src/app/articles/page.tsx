@@ -106,15 +106,8 @@ export default function ArticlesPage() {
           ))}
         </div>
       ) : articles.length === 0 ? (
-        <div className="py-16 text-center space-y-3">
-          <p className="text-sm font-medium text-[var(--ink)]">No articles yet.</p>
-          <p className="text-xs text-[var(--ink-muted)]">Be the first to publish a technical article.</p>
-          <Link
-            href="/new/article"
-            className="inline-block mt-2 text-xs px-4 py-2 bg-[var(--accent)] text-[var(--bg)] rounded-[var(--radius-sm)] font-medium hover:opacity-90 transition-opacity"
-          >
-            Write your first article →
-          </Link>
+        <div className="py-12 text-center text-[var(--ink-muted)] text-sm">
+          No articles found. <Link href="/new/article" className="text-[var(--accent)] hover:underline">Write the first one.</Link>
         </div>
       ) : (
         <div className="divide-y divide-[var(--border)]">
